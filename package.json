@@ -3,10 +3,7 @@
   "version": "0.19.1",
   "description": "Go grammar for tree-sitter",
   "main": "bindings/node",
-  "keywords": [
-    "parser",
-    "go"
-  ],
+  "keywords": ["parser", "go"],
   "author": "Max Brunsfeld",
   "license": "MIT",
   "dependencies": {
@@ -23,9 +20,14 @@
   "tree-sitter": [
     {
       "scope": "source.go",
-      "file-types": [
-        "go"
-      ]
+      "file-types": ["go"]
     }
-  ]
+  ],
+  "prettier": {
+    "trailingComma": "es5",
+    "tabWidth": 2,
+    "semi": false,
+    "arrowParens": "avoid",
+    "singleQuote": true
+  }
 }
