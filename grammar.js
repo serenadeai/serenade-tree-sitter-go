@@ -64,11 +64,17 @@ module.exports = grammar({
     [$.simple_type, $._expression],
     [$.qualified_type, $._expression],
     [$.func_literal, $.function_type],
+    [$.func_literal, $.definition_parameters],
     [$.function_type],
     [$.parameter, $.simple_type],
     [$.parameter, $.type_optional],
-    [$.parameters, $.receiver_argument_optional],
+    [$.declaration_parameters, $.type_parameters],
+    [$.declaration_parameters, $.receiver_argument_optional],
     [$.var_spec_with_assignment_list],
+    [$.declaration_parameters],
+    [$.return_value_name_list_optional],
+    [$.type_parameter_list],
+    [$.return_type_list, $.return_value_name_list_optional],
   ],
 
   supertypes: ($) => [$._expression, $._simple_statement, $._statement],
@@ -78,10 +84,10 @@ module.exports = grammar({
       seq(
         optional_with_placeholder("package_optional", $.package),
         optional_with_placeholder("import_list", $._import_list),
-        optional_with_placeholder("top_level_statement_list", $._top_level_statement_list)
+        optional_with_placeholder("top_level_statement_list", $.top_level_statement_list)
       ),
 
-    _top_level_statement_list: ($) =>
+    top_level_statement_list: ($) =>
       repeat1(
         choice(seq($._statement, terminator), seq($.top_level_declaration, optional(terminator)))
       ),
@@ -106,7 +112,8 @@ module.exports = grammar({
 
     _declaration: ($) =>
       choice(
-        $.const_declaration,
+        alias($.const_declaration, $.declaration_statement),
+        alias($.const_declaration_with_assignment, $.assignment_statement),
         $.type_declaration,
         alias($.var_declaration, $.declaration_statement),
         alias($.var_declaration_with_assignment, $.assignment_statement),
@@ -115,14 +122,12 @@ module.exports = grammar({
       ),
 
     const_declaration: ($) =>
-      seq("const", choice($.const_spec, seq("(", repeat(seq($.const_spec, terminator)), ")"))),
+      seq("const", choice($.var_spec, seq("(", repeat(seq($.var_spec, terminator)), ")"))),
 
-    const_spec: ($) =>
-      prec.left(
-        seq(
-          field("name", commaSep1($.identifier)),
-          optional(seq(optional(field("type", $._type)), "=", field("value", $.expression_list)))
-        )
+    const_declaration_with_assignment: ($) =>
+      seq(
+        "const",
+        choice($.var_spec_with_assignment, seq("(", $.var_spec_with_assignment_list, ")"))
       ),
 
     var_declaration: ($) =>
@@ -158,9 +163,9 @@ module.exports = grammar({
           "func",
           optional_with_placeholder("receiver_argument_optional", blank()),
           $.identifier,
-          $.parameters,
+          $.declaration_parameters,
           choice(
-            $.return_value_name_list_optional,
+            $.return_block,
             optional_with_placeholder("type_optional", alias($.simple_type, $.type))
           ),
           optional($.block)
@@ -174,57 +179,16 @@ module.exports = grammar({
           "func",
           $.receiver_argument_optional,
           field("identifier", $._field_identifier),
-          $.parameters,
+          $.declaration_parameters,
           choice(
-            $.return_value_name_list_optional,
+            $.return_block,
             optional_with_placeholder("type_optional", alias($.simple_type, $.type))
           ),
           optional($.block)
         )
       ),
 
-    receiver_argument_optional: ($) =>
-      seq(
-        "(",
-        choice(
-          alias($.parameter, $.receiver_argument),
-          alias($.variadic_parameter_declaration, $.receiver_argument)
-        ),
-        ")"
-      ),
-
-    return_value_name_list_optional: ($) =>
-      seq(
-        "(",
-        field(
-          "return_value_name_list",
-          seq(
-            choice(
-              seq(
-                optional(
-                  seq(
-                    commaSep1(
-                      choice(
-                        alias($.variadic_parameter_declaration, $.return_value_name),
-                        alias($.parameter, $.return_value_name)
-                      )
-                    ),
-                    ","
-                  )
-                ),
-                alias($.typed_parameter, $.return_value_name)
-              ),
-              commaSep1(alias($.return_type, $.return_value_name))
-            ),
-            optional(",")
-          )
-        ),
-        ")"
-      ),
-
-    return_type: ($) => $.type,
-
-    parameters: ($) =>
+    declaration_parameters: ($) =>
       seq(
         "(",
         optional_with_placeholder(
@@ -238,10 +202,73 @@ module.exports = grammar({
                 ","
               )
             ),
-            alias($.typed_parameter, $.parameter),
+            choice(
+              alias($.typed_parameter, $.parameter),
+              alias($.variadic_parameter_declaration, $.parameter)
+            ),
             optional(",")
           )
         ),
+        ")"
+      ),
+
+    return_value_name_list_optional: ($) =>
+      seq(
+        "(",
+        optional_with_placeholder(
+          "return_value_name_list",
+          seq(
+            optional(
+              seq(
+                commaSep1(
+                  choice(
+                    alias($.parameter, $.return_value_name),
+                    alias($.variadic_parameter_declaration, $.return_value_name)
+                  )
+                ),
+                ","
+              )
+            ),
+            choice(
+              alias($.typed_parameter, $.return_value_name),
+              alias($.variadic_parameter_declaration, $.return_value_name)
+            ),
+            optional(",")
+          )
+        ),
+        ")"
+      ),
+
+    receiver_argument_optional: ($) =>
+      seq(
+        "(",
+        choice(
+          alias($.parameter, $.receiver_argument),
+          alias($.variadic_parameter_declaration, $.receiver_argument)
+        ),
+        ")"
+      ),
+
+    definition_parameters: ($) => choice($.declaration_parameters, $.type_parameters),
+
+    return_block: ($) =>
+      choice(
+        $.return_value_name_list_optional,
+        alias($.return_type_list, $.return_value_name_list_optional) // TODO: label this correctly
+      ),
+
+    type_parameters: ($) =>
+      seq("(", alias($.type_parameter_list, $.parameter_list), optional(","), ")"),
+
+    type_parameter_list: ($) => commaSep1(alias($.type_parameter, $.parameter)),
+
+    type_parameter: ($) => $.type_optional,
+
+    return_type_list: ($) =>
+      seq(
+        "(",
+        optional_with_placeholder("return_value_name_list", commaSep1($.type)), // TODO: remove incorrect label when ast is updated
+        optional(","),
         ")"
       ),
 
@@ -251,8 +278,7 @@ module.exports = grammar({
 
     type_optional: ($) => $.type,
 
-    variadic_parameter_declaration: ($) =>
-      seq(field("name", optional($.identifier)), "...", field("type", $._type)),
+    variadic_parameter_declaration: ($) => seq(optional($.identifier), "...", $.type),
 
     type_alias: ($) =>
       seq(
@@ -339,7 +365,10 @@ module.exports = grammar({
       seq(
         choice(
           seq(field("identifier", commaSep1($._field_identifier)), $.type),
-          seq(optional("*"), field("type", choice($._type_identifier, $.qualified_type)))
+          seq(
+            optional_with_placeholder("identifier", "*"),
+            field("type", choice($._type_identifier, $.qualified_type))
+          )
         ),
         field("tag", optional($.string))
       ),
@@ -370,14 +399,14 @@ module.exports = grammar({
     method_signature: ($) =>
       seq(
         field("identifier", $._field_identifier),
-        field("parameters", $.parameters),
+        $.definition_parameters,
         choice(
-          $.return_value_name_list_optional,
+          $.return_block,
           optional_with_placeholder("type_optional", alias($.simple_type, $.type))
         )
       ),
 
-    map_type: ($) => seq("map", "[", field("key", $._type), "]", field("value", $._type)),
+    map_type: ($) => seq("map", "[", field("key_type", $._type), "]", field("value_type", $._type)),
 
     channel_type: ($) =>
       choice(
@@ -389,16 +418,19 @@ module.exports = grammar({
     function_type: ($) =>
       seq(
         "func",
-        $.parameters,
-        field("result", optional(choice($.parameters, alias($.simple_type, $.type))))
+        $.definition_parameters,
+        choice(
+          $.return_block,
+          optional_with_placeholder("type_optional", alias($.simple_type, $.type))
+        )
       ),
 
     // this goes away after spec update
     statement_or_block: ($) => $.block,
 
-    block: ($) => seq("{", optional_with_placeholder("statement_list", $._statement_list), "}"),
+    block: ($) => seq("{", optional_with_placeholder("statement_list", $.statement_list), "}"),
 
-    _statement_list: ($) =>
+    statement_list: ($) =>
       choice(
         seq(
           $._statement,
@@ -515,7 +547,7 @@ module.exports = grammar({
         $.statement_or_block
       ),
 
-    else_if_clause: ($) => seq("else", alias($.if_clause, $._if_clause)),
+    else_if_clause: ($) => seq("else", alias($.if_clause, $.if_clause_)),
 
     else_clause: ($) => seq("else", $.statement_or_block),
 
@@ -570,37 +602,36 @@ module.exports = grammar({
     expression_switch: ($) =>
       seq(
         "switch",
-        optional(seq(field("initializer", $._simple_statement), ";")),
+        optional(seq($._simple_statement, ";")),
         field("value", optional($._expression)),
         "{",
-        repeat(choice(alias($.expression_case, $.case), alias($.default_case, $.case))),
+        repeat($.expression_case_or_default),
         "}"
       ),
+
+    expression_case_or_default: ($) =>
+      choice(alias($.expression_case, $.case), alias($.default_case, $.case)),
 
     expression_case: ($) =>
       seq(
         "case",
         field("value", $.expression_list),
         ":",
-        optional_with_placeholder("statement_list", $._statement_list)
+        optional_with_placeholder("statement_list", $.statement_list)
       ),
 
     default_case: ($) =>
-      seq("default", ":", optional_with_placeholder("statement_list", $._statement_list)),
+      seq("default", ":", optional_with_placeholder("statement_list", $.statement_list)),
 
     type_switch: ($) =>
-      seq(
-        "switch",
-        $._type_switch_header,
-        "{",
-        repeat(choice(alias($.type_case, $.case), alias($.default_case, $.case))),
-        "}"
-      ),
+      seq("switch", $._type_switch_header, "{", repeat($.type_case_or_default), "}"),
+
+    type_case_or_default: ($) => choice(alias($.type_case, $.case), alias($.default_case, $.case)),
 
     _type_switch_header: ($) =>
       seq(
-        optional(seq(field("initializer", $._simple_statement), ";")),
-        optional(seq(field("alias", $.expression_list), ":=")),
+        optional(seq($._simple_statement, ";")),
+        optional(seq($.expression_list, ":=")),
         field("value", $._expression),
         ".",
         "(",
@@ -613,18 +644,20 @@ module.exports = grammar({
         "case",
         field("type", commaSep1($._type)),
         ":",
-        optional_with_placeholder("statement_list", $._statement_list)
+        optional_with_placeholder("statement_list", $.statement_list)
       ),
 
-    select_statement: ($) =>
-      seq("select", "{", repeat(choice($.communication_case, $.default_case)), "}"),
+    select_statement: ($) => seq("select", "{", repeat($.communication_case_or_default), "}"),
+
+    communication_case_or_default: ($) =>
+      choice(alias($.communication_case, $.case), alias($.default_case, $.case)),
 
     communication_case: ($) =>
       seq(
         "case",
         field("communication", choice($.send_statement, $.receive_statement)),
         ":",
-        optional_with_placeholder("statement_list", $._statement_list)
+        optional_with_placeholder("statement_list", $.statement_list)
       ),
 
     _expression: ($) =>
@@ -641,7 +674,7 @@ module.exports = grammar({
         alias(choice("new", "make"), $.identifier),
         $.composite_literal,
         $.map_literal,
-        $.func_literal,
+        alias($.func_literal, $.lambda),
         $.string,
         $.int_literal,
         $.float_literal,
@@ -764,19 +797,23 @@ module.exports = grammar({
         optional(
           seq(
             choice($.element, $.key_value_pair),
-            repeat(seq(",", choice($.element, $.key_value_pair))),
+            repeat($.list_element_with_seperator),
             optional(",")
           )
         ),
         "}"
       ),
 
+    list_element_with_seperator: ($) => seq(",", choice($.element, $.key_value_pair)),
+
+    key_value_pair_with_seperator: ($) => seq(",", $.key_value_pair),
+
     map_value: ($) =>
       seq(
         "{",
         optional_with_placeholder(
           "key_value_pair_list",
-          seq($.key_value_pair, repeat(seq(",", $.key_value_pair)), optional(","))
+          seq($.key_value_pair, repeat($.key_value_pair_with_seperator), optional(","))
         ),
         "}"
       ),
@@ -796,8 +833,11 @@ module.exports = grammar({
     func_literal: ($) =>
       seq(
         "func",
-        field("parameters", $.parameters),
-        field("result", optional(choice($.parameters, field("type", $.simple_type)))),
+        $.declaration_parameters,
+        choice(
+          $.return_block,
+          optional_with_placeholder("type_optional", alias($.simple_type, $.type))
+        ),
         field("body", $.block)
       ),
 
@@ -841,13 +881,13 @@ module.exports = grammar({
     _type_identifier: ($) => alias($.identifier, $.type_identifier),
     _field_identifier: ($) => alias($.identifier, $.field_identifier),
 
-    string: ($) => choice($.raw_string_literal, $.interpreted_string_literal),
+    string: ($) => choice($._raw_string_literal, $._interpreted_string_literal),
 
-    raw_string_literal: ($) =>
+    _raw_string_literal: ($) =>
       token(seq("`", optional_with_placeholder("string_text", repeat1(/[^`]/)), "`")),
 
     // TODO: use externals like with js/python grammars. Will enable string_text field correctly
-    interpreted_string_literal: ($) =>
+    _interpreted_string_literal: ($) =>
       token(seq('"', field("string_text", repeat(choice(/[^\\"\n]/, /\\(.|\n)/))), '"')),
 
     escape_sequence: ($) =>
