@@ -167,7 +167,22 @@ module.exports = grammar({
             alias($.return_block, $.return_value_name_list_optional),
             optional_with_placeholder('type_optional', alias($.simple_type, $.type))
           ),
-          optional($.block)
+          $.block
+        )
+      ),
+
+    function_definition: $ =>
+      prec.right(
+        1,
+        seq(
+          'func',
+          optional_with_placeholder('receiver_argument_optional', '$%$**NEVER#xuyuz#MATCH**$%$'),
+          $.identifier,
+          $.parameters,
+          choice(
+            alias($.return_block, $.return_value_name_list_optional),
+            optional_with_placeholder('type_optional', alias($.simple_type, $.type))
+          )
         )
       ),
 
@@ -731,7 +746,7 @@ module.exports = grammar({
       ),
 
     map_literal: $ =>
-      prec(PREC.composite_literal, seq(field('type', $.map_type), field('body', $.map_value))),
+      prec(PREC.composite_literal, seq(field('type', $.map_type), field('block', $.map_value))),
 
     literal_value: $ =>
       seq(

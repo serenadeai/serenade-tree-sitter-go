@@ -722,14 +722,86 @@
             ]
           },
           {
+            "type": "SYMBOL",
+            "name": "block"
+          }
+        ]
+      }
+    },
+    "function_definition": {
+      "type": "PREC_RIGHT",
+      "value": 1,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "func"
+          },
+          {
             "type": "CHOICE",
             "members": [
               {
-                "type": "SYMBOL",
-                "name": "block"
+                "type": "FIELD",
+                "name": "receiver_argument_optional",
+                "content": {
+                  "type": "STRING",
+                  "value": "$%$**NEVER#xuyuz#MATCH**$%$"
+                }
               },
               {
-                "type": "BLANK"
+                "type": "FIELD",
+                "name": "receiver_argument_optional",
+                "content": {
+                  "type": "BLANK"
+                }
+              }
+            ]
+          },
+          {
+            "type": "SYMBOL",
+            "name": "identifier"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "parameters"
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "ALIAS",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "return_block"
+                },
+                "named": true,
+                "value": "return_value_name_list_optional"
+              },
+              {
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "FIELD",
+                    "name": "type_optional",
+                    "content": {
+                      "type": "ALIAS",
+                      "content": {
+                        "type": "SYMBOL",
+                        "name": "simple_type"
+                      },
+                      "named": true,
+                      "value": "type"
+                    }
+                  },
+                  {
+                    "type": "FIELD",
+                    "name": "type_optional",
+                    "content": {
+                      "type": "BLANK"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -4388,7 +4460,7 @@
           },
           {
             "type": "FIELD",
-            "name": "body",
+            "name": "block",
             "content": {
               "type": "SYMBOL",
               "name": "map_value"

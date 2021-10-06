@@ -1596,7 +1596,7 @@
     "type": "map_literal",
     "named": true,
     "fields": {
-      "body": {
+      "block": {
         "multiple": false,
         "required": true,
         "types": [
