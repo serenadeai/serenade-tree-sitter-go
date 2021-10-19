@@ -328,7 +328,7 @@ module.exports = grammar({
             field('type', choice($._type_identifier, $.qualified_type))
           )
         ),
-        field('tag', optional($.string))
+        optional($.string) // tag
       ),
 
     interface: $ => seq('type', alias($._type_identifier, $.identifier), $.interface_type),
@@ -561,7 +561,7 @@ module.exports = grammar({
       seq(
         'switch',
         optional(seq($._simple_statement, ';')),
-        field('value', optional($._expression)),
+        optional($._expression), // value
         '{',
         repeat($.expression_case_or_default),
         '}'
@@ -629,7 +629,7 @@ module.exports = grammar({
         $.type_assertion_expression,
         $.type_conversion_expression,
         $.identifier,
-        alias(choice('new', 'make'), $.identifier),
+        choice('new', 'make'),
         $.composite_literal,
         $.map_literal,
         alias($.func_literal, $.lambda),
@@ -699,12 +699,12 @@ module.exports = grammar({
           '[',
           choice(
             seq(
-              field('start', optional($._expression)),
+              optional($._expression), // start
               ':',
-              field('end', optional($._expression))
+              optional($._expression) // end
             ),
             seq(
-              field('start', optional($._expression)),
+              optional($._expression), // start
               ':',
               field('end', $._expression),
               ':',
