@@ -67,7 +67,6 @@ module.exports = grammar({
     [$.function_type],
     [$.plain_parameter, $.simple_type],
     [$.parameters, $.receiver_argument_optional],
-    [$.var_spec_with_assignment_list],
     [$.return_type_list, $.return_value_name_list_optional],
     [$.return_type_list, $.type_optional],
     [$.special_call_identifier, $._expression],
@@ -80,7 +79,7 @@ module.exports = grammar({
       seq(
         optional_with_placeholder('package_optional', $.package),
         optional_with_placeholder('import_list', $.import_list),
-        optional_with_placeholder('top_level_statement_list', $.top_level_statement_list)
+        optional_with_placeholder('statement_list', $.top_level_statement_list)
       ),
 
     top_level_statement_list: $ =>
@@ -109,33 +108,38 @@ module.exports = grammar({
     _declaration: $ => choice($.type_declaration, $.declaration_statement, $.interface, $.struct),
 
     declaration_statement: $ =>
-      choice($.const_declaration, $.var_declaration, $.var_declaration_with_assignment),
+      choice($.const_declaration, $.variable_declaration),
 
     const_declaration: $ =>
       seq('const', choice($.const_spec, seq('(', repeat(seq($.const_spec, terminator)), ')'))),
 
-    var_declaration: $ =>
-      seq('var', choice($.var_spec, seq('(', repeat(seq($.var_spec, terminator)), ')'))),
-
-    var_declaration_with_assignment: $ =>
+    variable_declaration: $ =>
       seq(
         'var',
-        choice($.var_spec_with_assignment, seq('(', $.var_spec_with_assignment_list, ')'))
+        choice(
+          field('assignment_list', $.assignment), 
+          $.variable_declaration_list
+        )
       ),
 
-    var_spec: $ => seq($.assignment_variable, $.type_optional),
+    variable_declaration_list: $ => seq('(', 
+      optional_with_placeholder('assignment_list', repeat(seq($.assignment, terminator))), 
+    ')'),
 
-    var_spec_with_assignment: $ =>
+    assignment_variable: $ => $.identifier,
+    assignment: $ =>
       seq(
-        $.assignment_variable,
+        field('assignment_variable_list', commaSep1($.assignment_variable)),
         optional_with_placeholder('type_optional', $.type),
-        seq('=', alias($.expression_list, $.assignment_value))
+        optional_with_placeholder('assignment_value_list_optional', seq(
+          '=', alias($.expression_list, $.assignment_value)
+        ))
       ),
 
     const_spec: $ =>
       prec.left(
         seq(
-          $.assignment_variable,
+          commaSep1($.assignment_variable),
           optional(
             seq(
               optional_with_placeholder('type_optional', $.type),
@@ -144,15 +148,6 @@ module.exports = grammar({
             )
           )
         )
-      ),
-
-    assignment_variable: $ => commaSep1($.identifier),
-
-    var_spec_with_assignment_list: $ =>
-      seq(
-        repeat(choice($.var_spec, $.var_spec_with_assignment)),
-        $.var_spec_with_assignment,
-        repeat(choice($.var_spec, $.var_spec_with_assignment))
       ),
 
     function: $ =>
@@ -167,7 +162,7 @@ module.exports = grammar({
             alias($.return_block, $.return_value_name_list_optional),
             optional_with_placeholder('type_optional', alias($.simple_type, $.type))
           ),
-          $.block
+          $.enclosed_body
         )
       ),
 
@@ -198,7 +193,7 @@ module.exports = grammar({
             alias($.return_block, $.return_value_name_list_optional),
             optional_with_placeholder('type_optional', alias($.simple_type, $.type))
           ),
-          optional($.block)
+          optional($.enclosed_body)
         )
       ),
 
@@ -312,7 +307,7 @@ module.exports = grammar({
 
     struct: $ => seq('type', alias($._type_identifier, $.identifier), $.struct_type),
 
-    struct_type: $ => seq('struct', alias($.struct_body, $.block)),
+    struct_type: $ => seq('struct', alias($.struct_body, $.enclosed_body)),
 
     struct_body: $ =>
       seq(
@@ -338,7 +333,7 @@ module.exports = grammar({
 
     interface: $ => seq('type', alias($._type_identifier, $.identifier), $.interface_type),
 
-    interface_type: $ => seq('interface', alias($.interface_body, $.block)),
+    interface_type: $ => seq('interface', alias($.interface_body, $.enclosed_body)),
 
     interface_body: $ =>
       seq(
@@ -382,10 +377,7 @@ module.exports = grammar({
         )
       ),
 
-    // this goes away after spec update
-    statement_or_block: $ => $.block,
-
-    block: $ => seq('{', optional_with_placeholder('statement_list', $.statement_list), '}'),
+    enclosed_body: $ => seq('{', optional_with_placeholder('statement_list', $.statement_list), '}'),
 
     statement_list: $ =>
       choice(
@@ -405,8 +397,7 @@ module.exports = grammar({
         $.go_statement,
         $.defer,
         $.if,
-        $.for_clause,
-        $.enhanced_for_clause,
+        $.for,
         $.switch,
         $.select_statement,
         $.labeled_statement,
@@ -414,7 +405,7 @@ module.exports = grammar({
         $.break,
         $.continue,
         $.goto_statement,
-        $.block
+        $.enclosed_body
         // $.empty_statement
       ),
 
@@ -428,8 +419,10 @@ module.exports = grammar({
         $.send_statement,
         $.inc_statement,
         $.dec_statement,
-        $.assignment_statement
+        alias($.assignment_statement_as_declaration, $.variable_declaration)
       ),
+
+    assignment_statement_as_declaration: $ => field('assignment_list', alias($.assignment_statement, $.assignment)), 
 
     assignment_statement: $ => choice($.plain_assignment_statement, $.short_var_declaration),
 
@@ -499,35 +492,44 @@ module.exports = grammar({
         'if',
         optional_with_placeholder('block_initializer_optional', $.block_initializer_optional),
         field('condition', $._expression),
-        $.statement_or_block
+        $.enclosed_body
       ),
 
     block_initializer_optional: $ => seq(alias($._simple_statement, $.block_initializer), ';'),
 
     else_if_clause: $ => seq('else', alias($.if_clause, $.if_clause_)),
 
-    else_clause: $ => seq('else', $.statement_or_block),
+    else_clause: $ => seq('else', $.enclosed_body),
+
+    for: $ => choice(
+      $.for_clause, 
+      $.for_each_clause
+    ),
 
     for_clause: $ =>
       seq(
         'for',
         choice(
+          // seq(
+          //   optional_with_placeholder('block_initializer_optional', blank()),
+          //   optional_with_placeholder('condition_optional', blank()),
+          //   optional_with_placeholder('block_update_optional', blank())
+          // ),
           seq(
             optional_with_placeholder('block_initializer_optional', blank()),
-            optional_with_placeholder('condition_optional', blank()),
-            optional_with_placeholder('block_update_optional', blank())
-          ),
-          seq(
-            optional_with_placeholder('block_initializer_optional', blank()),
-            $.condition_optional,
+            optional_with_placeholder('condition_optional', $.condition_optional),
             optional_with_placeholder('block_update_optional', blank())
           ),
           $.for_header
         ),
-        $.statement_or_block
+        $.enclosed_body
       ),
 
-    enhanced_for_clause: $ => seq('for', $.range_condition, $.statement_or_block),
+    for_each_clause: $ => seq(
+      'for', 
+      $.range_condition, 
+      $.enclosed_body
+    ),
 
     for_header: $ =>
       seq(
@@ -548,10 +550,9 @@ module.exports = grammar({
 
     range_condition: $ =>
       seq(
-        choice(
-          seq(field('block_iterator', $.expression_list), choice('=', ':=')),
-          optional_with_placeholder('block_iterator', blank())
-        ),
+        optional_with_placeholder('block_iterator', 
+          seq($.expression_list, choice('=', ':='))
+        ), 
         'range',
         alias($._expression, $.block_collection)
       ),
@@ -797,7 +798,7 @@ module.exports = grammar({
           alias($.return_block, $.return_value_name_list_optional),
           optional_with_placeholder('type_optional', alias($.simple_type, $.type))
         ),
-        $.block
+        $.enclosed_body
       ),
 
     unary_expression: $ =>
