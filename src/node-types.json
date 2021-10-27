@@ -1,112 +1,14 @@
 [
   {
-    "type": "_expression",
-    "named": true,
-    "subtypes": [
-      {
-        "type": "binary_expression",
-        "named": true
-      },
-      {
-        "type": "call",
-        "named": true
-      },
-      {
-        "type": "composite_literal",
-        "named": true
-      },
-      {
-        "type": "false",
-        "named": true
-      },
-      {
-        "type": "float_literal",
-        "named": true
-      },
-      {
-        "type": "identifier",
-        "named": true
-      },
-      {
-        "type": "imaginary_literal",
-        "named": true
-      },
-      {
-        "type": "index_expression",
-        "named": true
-      },
-      {
-        "type": "int_literal",
-        "named": true
-      },
-      {
-        "type": "lambda",
-        "named": true
-      },
-      {
-        "type": "make",
-        "named": false
-      },
-      {
-        "type": "map_literal",
-        "named": true
-      },
-      {
-        "type": "new",
-        "named": false
-      },
-      {
-        "type": "nil",
-        "named": true
-      },
-      {
-        "type": "parenthesized_expression",
-        "named": true
-      },
-      {
-        "type": "rune_literal",
-        "named": true
-      },
-      {
-        "type": "selector_expression",
-        "named": true
-      },
-      {
-        "type": "slice_expression",
-        "named": true
-      },
-      {
-        "type": "string",
-        "named": true
-      },
-      {
-        "type": "true",
-        "named": true
-      },
-      {
-        "type": "type_assertion_expression",
-        "named": true
-      },
-      {
-        "type": "type_conversion_expression",
-        "named": true
-      },
-      {
-        "type": "unary_expression",
-        "named": true
-      }
-    ]
-  },
-  {
     "type": "_simple_statement",
     "named": true,
     "subtypes": [
       {
-        "type": "_expression",
+        "type": "dec_statement",
         "named": true
       },
       {
-        "type": "dec_statement",
+        "type": "expression_",
         "named": true
       },
       {
@@ -124,93 +26,99 @@
     ]
   },
   {
-    "type": "_statement",
-    "named": true,
-    "subtypes": [
-      {
-        "type": "_simple_statement",
-        "named": true
-      },
-      {
-        "type": "break",
-        "named": true
-      },
-      {
-        "type": "continue",
-        "named": true
-      },
-      {
-        "type": "declaration_statement",
-        "named": true
-      },
-      {
-        "type": "defer",
-        "named": true
-      },
-      {
-        "type": "enclosed_body",
-        "named": true
-      },
-      {
-        "type": "fallthrough_statement",
-        "named": true
-      },
-      {
-        "type": "for",
-        "named": true
-      },
-      {
-        "type": "go_statement",
-        "named": true
-      },
-      {
-        "type": "goto_statement",
-        "named": true
-      },
-      {
-        "type": "if",
-        "named": true
-      },
-      {
-        "type": "interface",
-        "named": true
-      },
-      {
-        "type": "labeled_statement",
-        "named": true
-      },
-      {
-        "type": "return",
-        "named": true
-      },
-      {
-        "type": "select_statement",
-        "named": true
-      },
-      {
-        "type": "struct",
-        "named": true
-      },
-      {
-        "type": "switch",
-        "named": true
-      },
-      {
-        "type": "type_declaration",
-        "named": true
-      }
-    ]
-  },
-  {
     "type": "argument",
     "named": true,
     "fields": {},
     "children": {
       "multiple": false,
-      "required": true,
+      "required": false,
       "types": [
         {
-          "type": "_expression",
+          "type": "binary_expression",
+          "named": true
+        },
+        {
+          "type": "call",
+          "named": true
+        },
+        {
+          "type": "composite_literal",
+          "named": true
+        },
+        {
+          "type": "expression_",
+          "named": true
+        },
+        {
+          "type": "false",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "imaginary_literal",
+          "named": true
+        },
+        {
+          "type": "index_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda",
+          "named": true
+        },
+        {
+          "type": "map_literal",
+          "named": true
+        },
+        {
+          "type": "nil",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "rune_literal",
+          "named": true
+        },
+        {
+          "type": "selector_expression",
+          "named": true
+        },
+        {
+          "type": "slice_expression",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        },
+        {
+          "type": "true",
+          "named": true
+        },
+        {
+          "type": "type_assertion_expression",
+          "named": true
+        },
+        {
+          "type": "type_conversion_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
           "named": true
         }
       ]
@@ -229,11 +137,11 @@
             "named": false
           },
           {
-            "type": "_expression",
+            "type": "argument",
             "named": true
           },
           {
-            "type": "argument",
+            "type": "expression_",
             "named": true
           },
           {
@@ -267,7 +175,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -341,7 +249,7 @@
       "required": true,
       "types": [
         {
-          "type": "_expression",
+          "type": "expression_",
           "named": true
         }
       ]
@@ -356,7 +264,11 @@
       "required": true,
       "types": [
         {
-          "type": "_expression",
+          "type": "expression_",
+          "named": true
+        },
+        {
+          "type": "identifier",
           "named": true
         }
       ]
@@ -371,7 +283,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -463,11 +375,106 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
       }
+    }
+  },
+  {
+    "type": "block_collection",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "binary_expression",
+          "named": true
+        },
+        {
+          "type": "call",
+          "named": true
+        },
+        {
+          "type": "composite_literal",
+          "named": true
+        },
+        {
+          "type": "false",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "imaginary_literal",
+          "named": true
+        },
+        {
+          "type": "index_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda",
+          "named": true
+        },
+        {
+          "type": "map_literal",
+          "named": true
+        },
+        {
+          "type": "nil",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "rune_literal",
+          "named": true
+        },
+        {
+          "type": "selector_expression",
+          "named": true
+        },
+        {
+          "type": "slice_expression",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        },
+        {
+          "type": "true",
+          "named": true
+        },
+        {
+          "type": "type_assertion_expression",
+          "named": true
+        },
+        {
+          "type": "type_conversion_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -659,6 +666,101 @@
     }
   },
   {
+    "type": "condition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "binary_expression",
+          "named": true
+        },
+        {
+          "type": "call",
+          "named": true
+        },
+        {
+          "type": "composite_literal",
+          "named": true
+        },
+        {
+          "type": "false",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "imaginary_literal",
+          "named": true
+        },
+        {
+          "type": "index_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda",
+          "named": true
+        },
+        {
+          "type": "map_literal",
+          "named": true
+        },
+        {
+          "type": "nil",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "rune_literal",
+          "named": true
+        },
+        {
+          "type": "selector_expression",
+          "named": true
+        },
+        {
+          "type": "slice_expression",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        },
+        {
+          "type": "true",
+          "named": true
+        },
+        {
+          "type": "type_assertion_expression",
+          "named": true
+        },
+        {
+          "type": "type_conversion_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "condition_optional",
     "named": true,
     "fields": {},
@@ -742,7 +844,7 @@
       "required": true,
       "types": [
         {
-          "type": "_expression",
+          "type": "expression_",
           "named": true
         }
       ]
@@ -776,7 +878,7 @@
       "required": true,
       "types": [
         {
-          "type": "_expression",
+          "type": "expression_",
           "named": true
         }
       ]
@@ -796,7 +898,7 @@
       "required": true,
       "types": [
         {
-          "type": "_expression",
+          "type": "expression_",
           "named": true
         },
         {
@@ -889,6 +991,101 @@
     }
   },
   {
+    "type": "expression_",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "binary_expression",
+          "named": true
+        },
+        {
+          "type": "call",
+          "named": true
+        },
+        {
+          "type": "composite_literal",
+          "named": true
+        },
+        {
+          "type": "false",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "imaginary_literal",
+          "named": true
+        },
+        {
+          "type": "index_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
+          "named": true
+        },
+        {
+          "type": "lambda",
+          "named": true
+        },
+        {
+          "type": "map_literal",
+          "named": true
+        },
+        {
+          "type": "nil",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "rune_literal",
+          "named": true
+        },
+        {
+          "type": "selector_expression",
+          "named": true
+        },
+        {
+          "type": "slice_expression",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        },
+        {
+          "type": "true",
+          "named": true
+        },
+        {
+          "type": "type_assertion_expression",
+          "named": true
+        },
+        {
+          "type": "type_conversion_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "expression_case_or_default",
     "named": true,
     "fields": {},
@@ -912,7 +1109,7 @@
       "required": true,
       "types": [
         {
-          "type": "_expression",
+          "type": "expression_",
           "named": true
         }
       ]
@@ -1133,7 +1330,7 @@
       "required": true,
       "types": [
         {
-          "type": "_expression",
+          "type": "expression_",
           "named": true
         }
       ]
@@ -1214,7 +1411,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -1250,7 +1447,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -1379,7 +1576,7 @@
       "required": true,
       "types": [
         {
-          "type": "_expression",
+          "type": "expression_",
           "named": true
         }
       ]
@@ -1394,7 +1591,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -1404,7 +1601,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -1496,7 +1693,43 @@
       "required": false,
       "types": [
         {
+          "type": "binary_expression",
+          "named": true
+        },
+        {
+          "type": "call",
+          "named": true
+        },
+        {
+          "type": "composite_literal",
+          "named": true
+        },
+        {
           "type": "element",
+          "named": true
+        },
+        {
+          "type": "false",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "imaginary_literal",
+          "named": true
+        },
+        {
+          "type": "index_expression",
+          "named": true
+        },
+        {
+          "type": "int_literal",
           "named": true
         },
         {
@@ -1504,7 +1737,55 @@
           "named": true
         },
         {
+          "type": "lambda",
+          "named": true
+        },
+        {
           "type": "list_element_with_seperator",
+          "named": true
+        },
+        {
+          "type": "map_literal",
+          "named": true
+        },
+        {
+          "type": "nil",
+          "named": true
+        },
+        {
+          "type": "parenthesized_expression",
+          "named": true
+        },
+        {
+          "type": "rune_literal",
+          "named": true
+        },
+        {
+          "type": "selector_expression",
+          "named": true
+        },
+        {
+          "type": "slice_expression",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        },
+        {
+          "type": "true",
+          "named": true
+        },
+        {
+          "type": "type_assertion_expression",
+          "named": true
+        },
+        {
+          "type": "type_conversion_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
           "named": true
         }
       ]
@@ -1519,7 +1800,7 @@
       "required": true,
       "types": [
         {
-          "type": "_expression",
+          "type": "expression_",
           "named": true
         },
         {
@@ -1564,7 +1845,7 @@
       "required": false,
       "types": [
         {
-          "type": "_statement",
+          "type": "statement",
           "named": true
         }
       ]
@@ -1830,7 +2111,7 @@
       "required": true,
       "types": [
         {
-          "type": "_expression",
+          "type": "expression_",
           "named": true
         }
       ]
@@ -2105,7 +2386,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -2195,7 +2476,7 @@
       "required": true,
       "types": [
         {
-          "type": "_expression",
+          "type": "expression_",
           "named": true
         }
       ]
@@ -2292,7 +2573,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -2308,7 +2589,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -2318,7 +2599,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -2404,7 +2685,7 @@
         "required": false,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -2414,7 +2695,7 @@
         "required": false,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -2424,7 +2705,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -2435,7 +2716,7 @@
       "required": false,
       "types": [
         {
-          "type": "_expression",
+          "type": "expression_",
           "named": true
         }
       ]
@@ -2525,11 +2806,94 @@
       "required": true,
       "types": [
         {
-          "type": "_expression",
+          "type": "arguments",
           "named": true
         },
         {
-          "type": "arguments",
+          "type": "expression_",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "statement",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "_simple_statement",
+          "named": true
+        },
+        {
+          "type": "break",
+          "named": true
+        },
+        {
+          "type": "continue",
+          "named": true
+        },
+        {
+          "type": "declaration_statement",
+          "named": true
+        },
+        {
+          "type": "defer",
+          "named": true
+        },
+        {
+          "type": "enclosed_body",
+          "named": true
+        },
+        {
+          "type": "fallthrough_statement",
+          "named": true
+        },
+        {
+          "type": "for",
+          "named": true
+        },
+        {
+          "type": "go_statement",
+          "named": true
+        },
+        {
+          "type": "goto_statement",
+          "named": true
+        },
+        {
+          "type": "if",
+          "named": true
+        },
+        {
+          "type": "interface",
+          "named": true
+        },
+        {
+          "type": "labeled_statement",
+          "named": true
+        },
+        {
+          "type": "return",
+          "named": true
+        },
+        {
+          "type": "select_statement",
+          "named": true
+        },
+        {
+          "type": "struct",
+          "named": true
+        },
+        {
+          "type": "switch",
+          "named": true
+        },
+        {
+          "type": "type_declaration",
           "named": true
         }
       ]
@@ -2544,7 +2908,11 @@
       "required": true,
       "types": [
         {
-          "type": "_statement",
+          "type": "labeled_statement",
+          "named": true
+        },
+        {
+          "type": "statement",
           "named": true
         }
       ]
@@ -2625,17 +2993,33 @@
             "named": true
           }
         ]
+      },
+      "statement": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "\n",
+            "named": false
+          },
+          {
+            "type": ";",
+            "named": false
+          },
+          {
+            "type": "function",
+            "named": true
+          },
+          {
+            "type": "method",
+            "named": true
+          },
+          {
+            "type": "statement",
+            "named": true
+          }
+        ]
       }
-    },
-    "children": {
-      "multiple": true,
-      "required": false,
-      "types": [
-        {
-          "type": "_statement",
-          "named": true
-        }
-      ]
     }
   },
   {
@@ -2764,7 +3148,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -2809,7 +3193,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -2931,7 +3315,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
@@ -2965,7 +3349,7 @@
         "required": true,
         "types": [
           {
-            "type": "_expression",
+            "type": "expression_",
             "named": true
           }
         ]
