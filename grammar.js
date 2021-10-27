@@ -80,16 +80,13 @@ module.exports = grammar({
       seq(
         optional_with_placeholder('package_optional', $.package),
         optional_with_placeholder('import_list', $.import_list),
-        optional_with_placeholder('statement_list', $.top_level_statement_list)
+        optional_with_placeholder('statement_list', repeat(alias($.top_level_statement, $.statement)))
       ),
 
-    top_level_statement_list: $ =>
-      repeat1(
-        field('statement', choice(
-          seq($.statement, terminator), 
-          seq($.top_level_declaration, optional(terminator))
-        ))
-      ),
+    top_level_statement: $ => choice(
+      seq($.statement, terminator), 
+      seq($.top_level_declaration, optional(terminator))
+    ),
 
     top_level_declaration: $ => field('function', choice($.function, $.method)),
 
@@ -555,9 +552,12 @@ module.exports = grammar({
     range_condition: $ =>
       seq(
         optional_with_placeholder('block_iterator', 
-          seq($.expression_list, choice('=', ':='))
+          seq($.expression_list)
         ), 
-        'range',
+        field('for_each_separator', seq(
+          choice('=', ':='), 
+          'range'
+        )),
         alias($.expression_, $.block_collection)
       ),
 
@@ -668,14 +668,19 @@ module.exports = grammar({
         ')'
       ),
 
+    argument: $ => choice(
+      $.expression_, 
+      $.variadic_argument
+    ), 
+
     arguments: $ =>
       seq(
         '(',
         optional_with_placeholder(
           'argument_list',
           seq(
-            commaSep(
-              choice(alias($.expression_, $.argument), alias($.variadic_argument, $.argument))
+            commaSep($.argument
+              // choice(alias($.expression_, $.argument), alias($.variadic_argument, $.argument))
             ),
             optional(',')
           )
