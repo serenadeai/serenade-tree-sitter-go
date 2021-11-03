@@ -76,7 +76,7 @@ module.exports = grammar({
     $._simple_statement],
 
   rules: {
-    source_file: $ =>
+    program: $ =>
       seq(
         optional_with_placeholder('package_optional', $.package),
         optional_with_placeholder('import_list', $.import_list),
@@ -315,10 +315,12 @@ module.exports = grammar({
         '{',
         optional_with_placeholder(
           'struct_member_list',
-          seq($.property, repeat(seq(terminator, $.property)), optional(terminator))
+          seq($.struct_member, repeat(seq(terminator, $.struct_member)), optional(terminator))
         ),
         '}'
       ),
+    
+    struct_member: $ => field('member', $.property),
 
     property: $ =>
       seq(
@@ -347,7 +349,10 @@ module.exports = grammar({
       ),
 
     interface_member: $ =>
-      choice($._type_identifier, $.qualified_type, alias($.method_signature, $.method)),
+      field(
+        'member', 
+        choice($._type_identifier, $.qualified_type, alias($.method_signature, $.method))
+    ),
 
     method_signature: $ =>
       seq(

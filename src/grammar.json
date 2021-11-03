@@ -2,7 +2,7 @@
   "name": "go",
   "word": "identifier",
   "rules": {
-    "source_file": {
+    "program": {
       "type": "SEQ",
       "members": [
         {
@@ -1675,7 +1675,7 @@
                 "members": [
                   {
                     "type": "SYMBOL",
-                    "name": "property"
+                    "name": "struct_member"
                   },
                   {
                     "type": "REPEAT",
@@ -1697,7 +1697,7 @@
                         },
                         {
                           "type": "SYMBOL",
-                          "name": "property"
+                          "name": "struct_member"
                         }
                       ]
                     }
@@ -1740,6 +1740,14 @@
           "value": "}"
         }
       ]
+    },
+    "struct_member": {
+      "type": "FIELD",
+      "name": "member",
+      "content": {
+        "type": "SYMBOL",
+        "name": "property"
+      }
     },
     "property": {
       "type": "SEQ",
@@ -1968,26 +1976,30 @@
       ]
     },
     "interface_member": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "_type_identifier"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "qualified_type"
-        },
-        {
-          "type": "ALIAS",
-          "content": {
+      "type": "FIELD",
+      "name": "member",
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
             "type": "SYMBOL",
-            "name": "method_signature"
+            "name": "_type_identifier"
           },
-          "named": true,
-          "value": "method"
-        }
-      ]
+          {
+            "type": "SYMBOL",
+            "name": "qualified_type"
+          },
+          {
+            "type": "ALIAS",
+            "content": {
+              "type": "SYMBOL",
+              "name": "method_signature"
+            },
+            "named": true,
+            "value": "method"
+          }
+        ]
+      }
     },
     "method_signature": {
       "type": "SEQ",
