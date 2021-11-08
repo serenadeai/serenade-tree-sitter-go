@@ -4373,7 +4373,7 @@
           },
           {
             "type": "FIELD",
-            "name": "block",
+            "name": "enclosed_body",
             "content": {
               "type": "SYMBOL",
               "name": "map_value"

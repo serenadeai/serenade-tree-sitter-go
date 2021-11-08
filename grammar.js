@@ -761,7 +761,7 @@ module.exports = grammar({
       ),
 
     map_literal: $ =>
-      prec(PREC.composite_literal, seq(field('type', $.map_type), field('block', $.map_value))),
+      prec(PREC.composite_literal, seq(field('type', $.map_type), field('enclosed_body', $.map_value))),
 
     literal_value: $ =>
       seq(

@@ -1852,7 +1852,7 @@
     "type": "map_literal",
     "named": true,
     "fields": {
-      "block": {
+      "enclosed_body": {
         "multiple": false,
         "required": true,
         "types": [
