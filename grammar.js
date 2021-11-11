@@ -72,21 +72,21 @@ module.exports = grammar({
     [$.special_call_identifier, $.expression_],
   ],
 
-  supertypes: $ => [
-    $._simple_statement],
+  supertypes: $ => [$._simple_statement],
 
   rules: {
     program: $ =>
       seq(
         optional_with_placeholder('package_optional', $.package),
         optional_with_placeholder('import_list', $.import_list),
-        optional_with_placeholder('statement_list', repeat(alias($.top_level_statement, $.statement)))
+        optional_with_placeholder(
+          'statement_list',
+          repeat(alias($.top_level_statement, $.statement))
+        )
       ),
 
-    top_level_statement: $ => choice(
-      seq($.statement, terminator), 
-      seq($.top_level_declaration, optional(terminator))
-    ),
+    top_level_statement: $ =>
+      choice(seq($.statement, terminator), seq($.top_level_declaration, optional(terminator))),
 
     top_level_declaration: $ => field('function', choice($.function, $.method)),
 
@@ -108,33 +108,30 @@ module.exports = grammar({
 
     _declaration: $ => choice($.type_declaration, $.declaration_statement, $.interface, $.struct),
 
-    declaration_statement: $ =>
-      choice($.const_declaration, $.variable_declaration),
+    declaration_statement: $ => choice($.const_declaration, $.variable_declaration),
 
     const_declaration: $ =>
       seq('const', choice($.const_spec, seq('(', repeat(seq($.const_spec, terminator)), ')'))),
 
     variable_declaration: $ =>
-      seq(
-        'var',
-        choice(
-          field('assignment_list', $.assignment), 
-          $.variable_declaration_list
-        )
-      ),
+      seq('var', choice(field('assignment_list', $.assignment), $.variable_declaration_list)),
 
-    variable_declaration_list: $ => seq('(', 
-      optional_with_placeholder('assignment_list', repeat(seq($.assignment, terminator))), 
-    ')'),
+    variable_declaration_list: $ =>
+      seq(
+        '(',
+        optional_with_placeholder('assignment_list', repeat(seq($.assignment, terminator))),
+        ')'
+      ),
 
     assignment_variable: $ => $.identifier,
     assignment: $ =>
       seq(
         field('assignment_variable_list', commaSep1($.assignment_variable)),
         optional_with_placeholder('type_optional', $.type),
-        optional_with_placeholder('assignment_value_list_optional', seq(
-          '=', alias($.expression_list, $.assignment_value)
-        ))
+        optional_with_placeholder(
+          'assignment_value_list_optional',
+          seq('=', alias($.expression_list, $.assignment_value))
+        )
       ),
 
     const_spec: $ =>
@@ -319,19 +316,19 @@ module.exports = grammar({
         ),
         '}'
       ),
-    
+
     struct_member: $ => field('member', $.property),
 
     property: $ =>
       seq(
         choice(
-          seq(field('identifier', commaSep1($._field_identifier)), $.type),
+          seq(field('identifier', commaSep1($._field_identifier)), $.type_optional),
           seq(
             optional_with_placeholder('identifier', '*'),
-            field('type', choice($._type_identifier, $.qualified_type))
+            field('type_optional', alias(choice($._type_identifier, $.qualified_type), $.type))
           )
         ),
-        optional($.string) // tag
+        optional_with_placeholder('property_tag_optional', alias($.string, $.property_tag)) // tag
       ),
 
     interface: $ => seq('type', alias($._type_identifier, $.identifier), $.interface_type),
@@ -350,9 +347,9 @@ module.exports = grammar({
 
     interface_member: $ =>
       field(
-        'member', 
+        'member',
         choice($._type_identifier, $.qualified_type, alias($.method_signature, $.method))
-    ),
+      ),
 
     method_signature: $ =>
       seq(
@@ -383,7 +380,8 @@ module.exports = grammar({
         )
       ),
 
-    enclosed_body: $ => seq('{', optional_with_placeholder('statement_list', $.statement_list), '}'),
+    enclosed_body: $ =>
+      seq('{', optional_with_placeholder('statement_list', $.statement_list), '}'),
 
     statement_list: $ =>
       choice(
@@ -428,7 +426,8 @@ module.exports = grammar({
         alias($.assignment_statement_as_declaration, $.variable_declaration)
       ),
 
-    assignment_statement_as_declaration: $ => field('assignment_list', alias($.assignment_statement, $.assignment)), 
+    assignment_statement_as_declaration: $ =>
+      field('assignment_list', alias($.assignment_statement, $.assignment)),
 
     assignment_statement: $ => choice($.plain_assignment_statement, $.short_var_declaration),
 
@@ -507,10 +506,7 @@ module.exports = grammar({
 
     else_clause: $ => seq('else', $.enclosed_body),
 
-    for: $ => choice(
-      $.for_clause, 
-      $.for_each_clause
-    ),
+    for: $ => choice($.for_clause, $.for_each_clause),
 
     for_clause: $ =>
       seq(
@@ -531,11 +527,7 @@ module.exports = grammar({
         $.enclosed_body
       ),
 
-    for_each_clause: $ => seq(
-      'for', 
-      $.range_condition, 
-      $.enclosed_body
-    ),
+    for_each_clause: $ => seq('for', $.range_condition, $.enclosed_body),
 
     for_header: $ =>
       seq(
@@ -556,13 +548,8 @@ module.exports = grammar({
 
     range_condition: $ =>
       seq(
-        optional_with_placeholder('block_iterator', 
-          seq($.expression_list)
-        ), 
-        field('for_each_separator', seq(
-          choice('=', ':='), 
-          'range'
-        )),
+        optional_with_placeholder('block_iterator', seq($.expression_list)),
+        field('for_each_separator', seq(choice('=', ':='), 'range')),
         alias($.expression_, $.block_collection)
       ),
 
@@ -673,10 +660,7 @@ module.exports = grammar({
         ')'
       ),
 
-    argument: $ => choice(
-      $.expression_, 
-      $.variadic_argument
-    ), 
+    argument: $ => choice($.expression_, $.variadic_argument),
 
     arguments: $ =>
       seq(
@@ -684,7 +668,8 @@ module.exports = grammar({
         optional_with_placeholder(
           'argument_list',
           seq(
-            commaSep($.argument
+            commaSep(
+              $.argument
               // choice(alias($.expression_, $.argument), alias($.variadic_argument, $.argument))
             ),
             optional(',')
@@ -761,7 +746,10 @@ module.exports = grammar({
       ),
 
     map_literal: $ =>
-      prec(PREC.composite_literal, seq(field('type', $.map_type), field('enclosed_body', $.map_value))),
+      prec(
+        PREC.composite_literal,
+        seq(field('type', $.map_type), field('enclosed_body', $.map_value))
+      ),
 
     literal_value: $ =>
       seq(

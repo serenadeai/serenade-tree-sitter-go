@@ -1789,7 +1789,7 @@
                 },
                 {
                   "type": "SYMBOL",
-                  "name": "type"
+                  "name": "type_optional"
                 }
               ]
             },
@@ -1818,19 +1818,24 @@
                 },
                 {
                   "type": "FIELD",
-                  "name": "type",
+                  "name": "type_optional",
                   "content": {
-                    "type": "CHOICE",
-                    "members": [
-                      {
-                        "type": "SYMBOL",
-                        "name": "_type_identifier"
-                      },
-                      {
-                        "type": "SYMBOL",
-                        "name": "qualified_type"
-                      }
-                    ]
+                    "type": "ALIAS",
+                    "content": {
+                      "type": "CHOICE",
+                      "members": [
+                        {
+                          "type": "SYMBOL",
+                          "name": "_type_identifier"
+                        },
+                        {
+                          "type": "SYMBOL",
+                          "name": "qualified_type"
+                        }
+                      ]
+                    },
+                    "named": true,
+                    "value": "type"
                   }
                 }
               ]
@@ -1841,11 +1846,24 @@
           "type": "CHOICE",
           "members": [
             {
-              "type": "SYMBOL",
-              "name": "string"
+              "type": "FIELD",
+              "name": "property_tag_optional",
+              "content": {
+                "type": "ALIAS",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "string"
+                },
+                "named": true,
+                "value": "property_tag"
+              }
             },
             {
-              "type": "BLANK"
+              "type": "FIELD",
+              "name": "property_tag_optional",
+              "content": {
+                "type": "BLANK"
+              }
             }
           ]
         }
@@ -7441,7 +7459,7 @@
               },
               {
                 "type": "PATTERN",
-                "value": "[^*]*\\*+([^/*][^*]*\\*+)*"
+                "value": "[^*]*\\*+([^\\/*][^*]*\\*+)*"
               },
               {
                 "type": "STRING",
