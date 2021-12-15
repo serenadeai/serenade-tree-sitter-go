@@ -72,7 +72,7 @@ module.exports = grammar({
     [$.special_call_identifier, $.expression_],
   ],
 
-  supertypes: $ => [$._simple_statement],
+  supertypes: $ => [],
 
   rules: {
     program: $ =>
@@ -319,14 +319,21 @@ module.exports = grammar({
 
     struct_member: $ => field('member', $.property),
 
+    property_case_star: $ =>  seq(
+      optional_with_placeholder('identifier', '*'),
+      field('type_optional', alias($.case_star_type, $.type))
+    ),
+
+    case_star_type: $ => field('type', choice(
+      $._type_identifier, 
+      $.qualified_type
+    )),
+
     property: $ =>
       seq(
         choice(
           seq(field('identifier', commaSep1($._field_identifier)), $.type_optional),
-          seq(
-            optional_with_placeholder('identifier', '*'),
-            field('type_optional', alias(choice($._type_identifier, $.qualified_type), $.type))
-          )
+          $.property_case_star
         ),
         optional_with_placeholder('property_tag_optional', alias($.string, $.property_tag)) // tag
       ),
