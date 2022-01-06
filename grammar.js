@@ -73,72 +73,76 @@ module.exports = grammar({
   extras: $ => [$.comment, /\s/],
 
   inline: $ => [
-    $._type,
     $._type_identifier,
     $._field_identifier,
-    $._package_identifier,
-    $._top_level_declaration,
-    $._string_literal,
+    $.top_level_declaration,
   ],
 
   word: $ => $.identifier,
 
   conflicts: $ => [
-    [$._simple_type, $._expression],
-    [$.qualified_type, $._expression],
+    [$.simple_type, $.expression_],
+    [$.qualified_type, $.expression_],
     [$.func_literal, $.function_type],
     [$.function_type],
-    [$.parameter_declaration, $._simple_type],
+    [$.plain_parameter, $.simple_type],
+    [$.parameters, $.receiver_argument_optional],
+    [$.return_type_list, $.return_value_name_list_optional],
+    [$.return_type_list, $.type_optional],
+    [$.special_call_identifier, $.expression_],
   ],
 
-  supertypes: $ => [
-    $._expression,
-    $._type,
-    $._simple_type,
-    $._statement,
-    $._simple_statement,
-  ],
+  supertypes: $ => [],
 
   rules: {
-    source_file: $ =>
-      repeat(
-        choice(
-          seq($._statement, terminator),
-          seq($._top_level_declaration, optional(terminator))
+    program: $ =>
+      seq(
+        optional_with_placeholder('package_optional', $.package),
+        optional_with_placeholder('import_list', $.import_list),
+        optional_with_placeholder(
+          'statement_list',
+          repeat(alias($.top_level_statement, $.statement))
         )
       ),
 
-    _top_level_declaration: $ =>
+    top_level_statement: $ =>
       choice(
-        $.package_clause,
-        $.function_declaration,
-        $.method_declaration,
-        $.import_declaration
+        seq($.statement, terminator),
+        seq($.top_level_declaration, optional(terminator))
       ),
 
-    package_clause: $ => seq('package', $._package_identifier),
+    top_level_declaration: $ => field('function', choice($.function, $.method)),
 
-    import_declaration: $ =>
-      seq('import', choice($.import_spec, $.import_spec_list)),
+    package: $ => seq('package', $.identifier),
 
-    import_spec: $ =>
+    import_list: $ => repeat1($.import),
+
+    import: $ =>
+      seq('import', choice($.import_specifier, $.import_specifier_list)),
+
+    import_specifier: $ =>
       seq(
         optional(
-          field(
-            'name',
-            choice($.dot, $.blank_identifier, $._package_identifier)
-          )
+          field('name', choice($.dot, $.blank_identifier, $.identifier))
         ),
-        field('path', $._string_literal)
+        field('path', $.string)
       ),
     dot: $ => '.',
     blank_identifier: $ => '_',
 
-    import_spec_list: $ =>
-      seq('(', repeat(seq($.import_spec, terminator)), ')'),
+    import_specifier_list: $ =>
+      seq('(', repeat(seq($.import_specifier, terminator)), ')'),
 
     _declaration: $ =>
-      choice($.const_declaration, $.type_declaration, $.var_declaration),
+      choice(
+        $.type_declaration,
+        $.declaration_statement,
+        $.interface,
+        $.struct
+      ),
+
+    declaration_statement: $ =>
+      choice($.const_declaration, $.variable_declaration),
 
     const_declaration: $ =>
       seq(
@@ -149,85 +153,166 @@ module.exports = grammar({
         )
       ),
 
+    variable_declaration: $ =>
+      seq(
+        'var',
+        choice(
+          field('assignment_list', $.assignment),
+          $.variable_declaration_list
+        )
+      ),
+
+    variable_declaration_list: $ =>
+      seq(
+        '(',
+        optional_with_placeholder(
+          'assignment_list',
+          repeat(seq($.assignment, terminator))
+        ),
+        ')'
+      ),
+
+    assignment_variable: $ => $.identifier,
+    assignment: $ =>
+      seq(
+        field('assignment_variable_list', commaSep1($.assignment_variable)),
+        optional_with_placeholder('type_optional', $.type),
+        optional_with_placeholder(
+          'assignment_value_list_optional',
+          seq('=', alias($.expression_list, $.assignment_value))
+        )
+      ),
+
     const_spec: $ =>
       prec.left(
         seq(
-          field('name', commaSep1($.identifier)),
+          commaSep1($.assignment_variable),
           optional(
             seq(
-              optional(field('type', $._type)),
+              optional_with_placeholder('type_optional', $.type),
               '=',
-              field('value', $.expression_list)
+              alias($.expression_list, $.assignment_value)
             )
           )
         )
       ),
 
-    var_declaration: $ =>
-      seq(
-        'var',
-        choice($.var_spec, seq('(', repeat(seq($.var_spec, terminator)), ')'))
-      ),
-
-    var_spec: $ =>
-      seq(
-        field('name', commaSep1($.identifier)),
-        choice(
-          seq(
-            field('type', $._type),
-            optional(seq('=', field('value', $.expression_list)))
+    function: $ =>
+      prec.right(
+        1,
+        seq(
+          'func',
+          optional_with_placeholder(
+            'receiver_argument_optional',
+            '$%$**NEVER#xuyuz#MATCH**$%$'
           ),
-          seq('=', field('value', $.expression_list))
+          $.identifier,
+          $.parameters,
+          choice(
+            alias($.return_block, $.return_value_name_list_optional),
+            optional_with_placeholder(
+              'type_optional',
+              alias($.simple_type, $.type)
+            )
+          ),
+          $.enclosed_body
         )
       ),
 
-    function_declaration: $ =>
+    function_definition: $ =>
       prec.right(
         1,
         seq(
           'func',
-          field('name', $.identifier),
-          field('parameters', $.parameter_list),
-          field('result', optional(choice($.parameter_list, $._simple_type))),
-          field('body', optional($.block))
+          optional_with_placeholder(
+            'receiver_argument_optional',
+            '$%$**NEVER#xuyuz#MATCH**$%$'
+          ),
+          $.identifier,
+          $.parameters,
+          choice(
+            alias($.return_block, $.return_value_name_list_optional),
+            optional_with_placeholder(
+              'type_optional',
+              alias($.simple_type, $.type)
+            )
+          )
         )
       ),
 
-    method_declaration: $ =>
+    method: $ =>
       prec.right(
         1,
         seq(
           'func',
-          field('receiver', $.parameter_list),
-          field('name', $._field_identifier),
-          field('parameters', $.parameter_list),
-          field('result', optional(choice($.parameter_list, $._simple_type))),
-          field('body', optional($.block))
+          $.receiver_argument_optional,
+          field('identifier', $._field_identifier),
+          $.parameters,
+          choice(
+            alias($.return_block, $.return_value_name_list_optional),
+            optional_with_placeholder(
+              'type_optional',
+              alias($.simple_type, $.type)
+            )
+          ),
+          optional($.enclosed_body)
         )
       ),
 
-    parameter_list: $ =>
+    parameters: $ =>
       seq(
         '(',
-        optional(
-          seq(
-            commaSep(
-              choice($.parameter_declaration, $.variadic_parameter_declaration)
-            ),
-            optional(',')
-          )
+        optional_with_placeholder(
+          'parameter_list',
+          seq(commaSep($.parameter), optional(','))
         ),
         ')'
       ),
 
-    parameter_declaration: $ =>
-      seq(field('name', commaSep($.identifier)), field('type', $._type)),
+    return_value_name_list_optional: $ =>
+      seq(
+        '(',
+        optional_with_placeholder(
+          'return_value_name_list',
+          seq(commaSep(alias($.parameter, $.return_value_name)), optional(','))
+        ),
+        ')'
+      ),
 
-    variadic_parameter_declaration: $ =>
-      seq(field('name', optional($.identifier)), '...', field('type', $._type)),
+    receiver_argument_optional: $ =>
+      seq('(', alias($.parameter, $.receiver_argument), ')'),
+
+    return_block: $ =>
+      choice(
+        $.return_value_name_list_optional,
+        $.return_type_list // TODO: label this correctly
+      ),
+
+    return_type_list: $ =>
+      seq(
+        '(',
+        optional_with_placeholder('return_value_name_list', commaSep1($.type)), // TODO: remove incorrect label when ast is updated
+        optional(','),
+        ')'
+      ),
+
+    parameter: $ =>
+      choice($.plain_parameter, $.variadic_parameter, $.type_optional),
+
+    plain_parameter: $ =>
+      seq($.identifier, optional_with_placeholder('type_optional', $.type)),
+
+    variadic_parameter: $ =>
+      seq(optional($.identifier), '...', $.type_optional),
+
+    type_optional: $ => $.type,
 
     type_alias: $ =>
-      seq(field('name', $._type_identifier), '=', field('type', $._type)),
+      seq(
+        field('name', $._type_identifier),
+        '=',
+        field('type', choice($._simple_type_excluding, $.parenthesized_type))
+      ),
 
     type_declaration: $ =>
       seq(
@@ -244,17 +329,22 @@ module.exports = grammar({
       ),
 
     type_spec: $ =>
-      seq(field('name', $._type_identifier), field('type', $._type)),
+      seq(
+        field('identifier', $._type_identifier),
+        field('type', choice($._simple_type_excluding, $.parenthesized_type))
+      ),
 
     field_name_list: $ => commaSep1($._field_identifier),
 
-    expression_list: $ => commaSep1($._expression),
+    expression_list: $ => commaSep1($.expression_),
 
-    _type: $ => choice($._simple_type, $.parenthesized_type),
+    type: $ => choice($.simple_type, $.parenthesized_type),
+
+    _type: $ => choice($.simple_type, $.parenthesized_type),
 
     parenthesized_type: $ => seq('(', $._type, ')'),
 
-    _simple_type: $ =>
+    simple_type: $ =>
       choice(
         prec.dynamic(-1, $._type_identifier),
         $.qualified_type,
@@ -268,75 +358,117 @@ module.exports = grammar({
         $.function_type
       ),
 
+    _simple_type_excluding: $ =>
+      choice(
+        prec.dynamic(-1, $._type_identifier),
+        $.qualified_type,
+        $.pointer_type,
+        $.array_type,
+        $.slice_type,
+        $.map_type,
+        $.channel_type,
+        $.function_type
+      ),
+
     pointer_type: $ => prec(PREC.unary, seq('*', $._type)),
 
     array_type: $ =>
-      seq('[', field('length', $._expression), ']', field('element', $._type)),
+      seq('[', field('length', $.expression_), ']', field('element', $._type)),
 
     implicit_length_array_type: $ =>
       seq('[', '...', ']', field('element', $._type)),
 
     slice_type: $ => seq('[', ']', field('element', $._type)),
 
-    struct_type: $ => seq('struct', $.field_declaration_list),
+    struct: $ =>
+      seq('type', alias($._type_identifier, $.identifier), $.struct_type),
 
-    field_declaration_list: $ =>
+    struct_type: $ => seq('struct', alias($.struct_body, $.enclosed_body)),
+
+    struct_body: $ =>
       seq(
         '{',
-        optional(
+        optional_with_placeholder(
+          'struct_member_list',
           seq(
-            $.field_declaration,
-            repeat(seq(terminator, $.field_declaration)),
+            $.struct_member,
+            repeat(seq(terminator, $.struct_member)),
             optional(terminator)
           )
         ),
         '}'
       ),
 
-    field_declaration: $ =>
+    struct_member: $ => field('member', $.property),
+
+    property_case_star: $ =>
+      seq(
+        optional_with_placeholder('identifier', '*'),
+        field('type_optional', alias($.case_star_type, $.type))
+      ),
+
+    case_star_type: $ =>
+      field('type', choice($._type_identifier, $.qualified_type)),
+
+    property: $ =>
       seq(
         choice(
           seq(
-            field('name', commaSep1($._field_identifier)),
-            field('type', $._type)
+            field('identifier', commaSep1($._field_identifier)),
+            $.type_optional
           ),
-          seq(
-            optional('*'),
-            field('type', choice($._type_identifier, $.qualified_type))
-          )
+          $.property_case_star
         ),
-        field('tag', optional($._string_literal))
+        optional_with_placeholder(
+          'property_tag_optional',
+          alias($.string, $.property_tag)
+        ) // tag
       ),
 
-    interface_type: $ => seq('interface', $.method_spec_list),
+    interface: $ =>
+      seq('type', alias($._type_identifier, $.identifier), $.interface_type),
 
-    method_spec_list: $ =>
+    interface_type: $ =>
+      seq('interface', alias($.interface_body, $.enclosed_body)),
+
+    interface_body: $ =>
       seq(
         '{',
-        optional(
+        optional_with_placeholder(
+          'interface_member_list',
           seq(
-            choice($._type_identifier, $.qualified_type, $.method_spec),
-            repeat(
-              seq(
-                terminator,
-                choice($._type_identifier, $.qualified_type, $.method_spec)
-              )
-            ),
+            $.interface_member,
+            repeat(seq(terminator, $.interface_member)),
             optional(terminator)
           )
         ),
         '}'
       ),
 
-    method_spec: $ =>
-      seq(
-        field('name', $._field_identifier),
-        field('parameters', $.parameter_list),
-        field('result', optional(choice($.parameter_list, $._simple_type)))
+    interface_member: $ =>
+      field(
+        'member',
+        choice(
+          $._type_identifier,
+          $.qualified_type,
+          alias($.method_signature, $.method)
+        )
       ),
 
-    map_type: $ =>
-      seq('map', '[', field('key', $._type), ']', field('value', $._type)),
+    method_signature: $ =>
+      seq(
+        alias($._field_identifier, $.identifier),
+        $.parameters,
+        choice(
+          alias($.return_block, $.return_value_name_list_optional),
+          optional_with_placeholder(
+            'type_optional',
+            alias($.simple_type, $.type)
+          )
+        )
+      ),
+
+    map_type: $ => seq('map', '[', $.type, ']', $.type),
 
     channel_type: $ =>
       choice(
@@ -348,17 +480,28 @@ module.exports = grammar({
     function_type: $ =>
       seq(
         'func',
-        field('parameters', $.parameter_list),
-        field('result', optional(choice($.parameter_list, $._simple_type)))
+        $.parameters,
+        choice(
+          alias($.return_block, $.return_value_name_list_optional),
+          optional_with_placeholder(
+            'type_optional',
+            alias($.simple_type, $.type)
+          )
+        )
       ),
 
-    block: $ => seq('{', optional($._statement_list), '}'),
+    enclosed_body: $ =>
+      seq(
+        '{',
+        optional_with_placeholder('statement_list', $.statement_list),
+        '}'
+      ),
 
-    _statement_list: $ =>
+    statement_list: $ =>
       choice(
         seq(
-          $._statement,
-          repeat(seq(terminator, $._statement)),
+          $.statement,
+          repeat(seq(terminator, $.statement)),
           optional(
             seq(
               terminator,
@@ -369,70 +512,76 @@ module.exports = grammar({
         alias($.empty_labeled_statement, $.labeled_statement)
       ),
 
-    _statement: $ =>
+    statement: $ =>
       choice(
         $._declaration,
         $._simple_statement,
-        $.return_statement,
+        $.return,
         $.go_statement,
-        $.defer_statement,
-        $.if_statement,
-        $.for_statement,
-        $.expression_switch_statement,
-        $.type_switch_statement,
+        $.defer,
+        $.if,
+        $.for,
+        $.switch,
         $.select_statement,
         $.labeled_statement,
         $.fallthrough_statement,
-        $.break_statement,
-        $.continue_statement,
+        $.break,
+        $.continue,
         $.goto_statement,
-        $.block,
-        $.empty_statement
+        $.enclosed_body
+        // $.empty_statement
       ),
 
-    empty_statement: $ => ';',
+    switch: $ => choice($.expression_switch, $.type_switch),
+
+    // empty_statement: ($) => ";",
 
     _simple_statement: $ =>
       choice(
-        $._expression,
+        $.expression_,
         $.send_statement,
         $.inc_statement,
         $.dec_statement,
-        $.assignment_statement,
-        $.short_var_declaration
+        alias($.assignment_statement_as_declaration, $.variable_declaration)
       ),
 
+    assignment_statement_as_declaration: $ =>
+      field('assignment_list', alias($.assignment_statement, $.assignment)),
+
+    assignment_statement: $ =>
+      choice($.plain_assignment_statement, $.short_var_declaration),
+
     send_statement: $ =>
-      seq(field('channel', $._expression), '<-', field('value', $._expression)),
+      seq(field('channel', $.expression_), '<-', field('value', $.expression_)),
 
     receive_statement: $ =>
       seq(
         optional(seq(field('left', $.expression_list), choice('=', ':='))),
-        field('right', $._expression)
+        field('right', $.expression_)
       ),
 
-    inc_statement: $ => seq($._expression, '++'),
+    inc_statement: $ => seq($.expression_, '++'),
 
-    dec_statement: $ => seq($._expression, '--'),
+    dec_statement: $ => seq($.expression_, '--'),
 
-    assignment_statement: $ =>
+    plain_assignment_statement: $ =>
       seq(
-        field('left', $.expression_list),
+        alias($.expression_list, $.assignment_variable),
         field('operator', choice(...assignment_operators)),
-        field('right', $.expression_list)
+        alias($.expression_list, $.assignment_value)
       ),
 
     short_var_declaration: $ =>
       seq(
         // TODO: this should really only allow identifier lists, but that causes
         // conflicts between identifiers as expressions vs identifiers here.
-        field('left', $.expression_list),
+        alias($.expression_list, $.assignment_variable),
         ':=',
-        field('right', $.expression_list)
+        alias($.expression_list, $.assignment_value)
       ),
 
     labeled_statement: $ =>
-      seq(field('label', alias($.identifier, $.label_name)), ':', $._statement),
+      seq(field('label', alias($.identifier, $.label_name)), ':', $.statement),
 
     empty_labeled_statement: $ =>
       seq(field('label', alias($.identifier, $.label_name)), ':'),
@@ -442,88 +591,151 @@ module.exports = grammar({
     // be parsed as a parent node that *contains* a `fallthrough` token.
     fallthrough_statement: $ => prec.left('fallthrough'),
 
-    break_statement: $ =>
-      seq('break', optional(alias($.identifier, $.label_name))),
+    break: $ => seq('break', optional(alias($.identifier, $.label_name))),
 
-    continue_statement: $ =>
-      seq('continue', optional(alias($.identifier, $.label_name))),
+    continue: $ => seq('continue', optional(alias($.identifier, $.label_name))),
 
     goto_statement: $ => seq('goto', alias($.identifier, $.label_name)),
 
-    return_statement: $ => seq('return', optional($.expression_list)),
-
-    go_statement: $ => seq('go', $._expression),
-
-    defer_statement: $ => seq('defer', $._expression),
-
-    if_statement: $ =>
+    return: $ =>
       seq(
-        'if',
-        optional(seq(field('initializer', $._simple_statement), ';')),
-        field('condition', $._expression),
-        field('consequence', $.block),
-        optional(
-          seq('else', field('alternative', choice($.block, $.if_statement)))
+        'return',
+        optional_with_placeholder(
+          'return_value_optional',
+          alias($.expression_list, $.return_value)
         )
       ),
 
-    for_statement: $ =>
+    go_statement: $ => seq('go', $.expression_),
+
+    defer: $ => seq('defer', $.expression_),
+
+    if: $ =>
       seq(
-        'for',
-        optional(choice($._expression, $.for_clause, $.range_clause)),
-        field('body', $.block)
+        $.if_clause,
+        optional_with_placeholder(
+          'else_if_clause_list',
+          repeat1($.else_if_clause)
+        ),
+        optional_with_placeholder('else_clause_optional', $.else_clause)
       ),
+
+    if_clause: $ =>
+      seq(
+        'if',
+        optional_with_placeholder(
+          'block_initializer_optional',
+          $.block_initializer_optional
+        ),
+        field('condition', $.expression_),
+        $.enclosed_body
+      ),
+
+    block_initializer_optional: $ =>
+      seq(alias($._simple_statement, $.block_initializer), ';'),
+
+    else_if_clause: $ => seq('else', alias($.if_clause, $.if_clause_)),
+
+    else_clause: $ => seq('else', $.enclosed_body),
+
+    for: $ => choice($.for_clause, $.for_each_clause),
 
     for_clause: $ =>
       seq(
-        field('initializer', optional($._simple_statement)),
-        ';',
-        field('condition', optional($._expression)),
-        ';',
-        field('update', optional($._simple_statement))
+        'for',
+        choice(
+          // seq(
+          //   optional_with_placeholder('block_initializer_optional', blank()),
+          //   optional_with_placeholder('condition_optional', blank()),
+          //   optional_with_placeholder('block_update_optional', blank())
+          // ),
+          seq(
+            optional_with_placeholder('block_initializer_optional', blank()),
+            optional_with_placeholder(
+              'condition_optional',
+              $.condition_optional
+            ),
+            optional_with_placeholder('block_update_optional', blank())
+          ),
+          $.for_header
+        ),
+        $.enclosed_body
       ),
 
-    range_clause: $ =>
+    for_each_clause: $ => seq('for', $.range_condition, $.enclosed_body),
+
+    for_header: $ =>
       seq(
-        optional(seq(field('left', $.expression_list), choice('=', ':='))),
-        'range',
-        field('right', $._expression)
+        optional_with_placeholder(
+          'block_initializer_optional',
+          alias($._simple_statement, $.block_initializer)
+        ),
+        ';',
+        optional_with_placeholder(
+          'condition_optional',
+          alias($.expression_, $.condition)
+        ),
+        ';',
+        optional_with_placeholder(
+          'block_update_optional',
+          alias($._simple_statement, $.block_update)
+        )
       ),
 
-    expression_switch_statement: $ =>
+    condition_optional: $ => alias($.expression_, $.condition),
+
+    range_condition: $ =>
+      seq(
+        optional_with_placeholder('block_iterator', seq($.expression_list)),
+        field('for_each_separator', seq(choice('=', ':='), 'range')),
+        alias($.expression_, $.block_collection)
+      ),
+
+    expression_switch: $ =>
       seq(
         'switch',
-        optional(seq(field('initializer', $._simple_statement), ';')),
-        field('value', optional($._expression)),
+        optional(seq($._simple_statement, ';')),
+        optional($.expression_), // value
         '{',
-        repeat(choice($.expression_case, $.default_case)),
+        repeat($.expression_case_or_default),
         '}'
       ),
+
+    expression_case_or_default: $ =>
+      choice(alias($.expression_case, $.case), alias($.default_case, $.case)),
 
     expression_case: $ =>
       seq(
         'case',
         field('value', $.expression_list),
         ':',
-        optional($._statement_list)
+        optional_with_placeholder('statement_list', $.statement_list)
       ),
 
-    default_case: $ => seq('default', ':', optional($._statement_list)),
+    default_case: $ =>
+      seq(
+        'default',
+        ':',
+        optional_with_placeholder('statement_list', $.statement_list)
+      ),
 
-    type_switch_statement: $ =>
+    type_switch: $ =>
       seq(
         'switch',
         $._type_switch_header,
         '{',
-        repeat(choice($.type_case, $.default_case)),
+        repeat($.type_case_or_default),
         '}'
       ),
 
+    type_case_or_default: $ =>
+      choice(alias($.type_case, $.case), alias($.default_case, $.case)),
+
     _type_switch_header: $ =>
       seq(
-        optional(seq(field('initializer', $._simple_statement), ';')),
-        optional(seq(field('alias', $.expression_list), ':=')),
-        field('value', $._expression),
+        optional(seq($._simple_statement, ';')),
+        optional(seq($.expression_list, ':=')),
+        field('value', $.expression_),
         '.',
         '(',
         'type',
@@ -535,15 +747,16 @@ module.exports = grammar({
         'case',
         field('type', commaSep1($._type)),
         ':',
-        optional($._statement_list)
+        optional_with_placeholder('statement_list', $.statement_list)
       ),
 
     select_statement: $ =>
-      seq(
-        'select',
-        '{',
-        repeat(choice($.communication_case, $.default_case)),
-        '}'
+      seq('select', '{', repeat($.communication_case_or_default), '}'),
+
+    communication_case_or_default: $ =>
+      choice(
+        alias($.communication_case, $.case),
+        alias($.default_case, $.case)
       ),
 
     communication_case: $ =>
@@ -551,24 +764,25 @@ module.exports = grammar({
         'case',
         field('communication', choice($.send_statement, $.receive_statement)),
         ':',
-        optional($._statement_list)
+        optional_with_placeholder('statement_list', $.statement_list)
       ),
 
-    _expression: $ =>
+    expression_: $ =>
       choice(
         $.unary_expression,
         $.binary_expression,
         $.selector_expression,
         $.index_expression,
         $.slice_expression,
-        $.call_expression,
+        $.call,
         $.type_assertion_expression,
         $.type_conversion_expression,
         $.identifier,
-        alias(choice('new', 'make'), $.identifier),
+        choice('new', 'make'),
         $.composite_literal,
-        $.func_literal,
-        $._string_literal,
+        $.map_literal,
+        alias($.func_literal, $.lambda),
+        $.string,
         $.int_literal,
         $.float_literal,
         $.imaginary_literal,
@@ -579,35 +793,44 @@ module.exports = grammar({
         $.parenthesized_expression
       ),
 
-    parenthesized_expression: $ => seq('(', $._expression, ')'),
+    parenthesized_expression: $ => seq('(', $.expression_, ')'),
 
-    call_expression: $ =>
-      prec(
-        PREC.primary,
-        choice(
-          seq(
-            field('function', alias(choice('new', 'make'), $.identifier)),
-            field('arguments', alias($.special_argument_list, $.argument_list))
-          ),
-          seq(
-            field('function', $._expression),
-            field('arguments', $.argument_list)
-          )
-        )
+    call: $ => prec(PREC.primary, choice($.special_call, $.standard_call)),
+
+    standard_call: $ => seq($.expression_, $.arguments),
+
+    special_call: $ =>
+      seq(
+        alias($.special_call_identifier, $.identifier),
+        alias($.special_arguments, $.arguments)
       ),
 
-    variadic_argument: $ => prec.right(seq($._expression, '...')),
+    special_call_identifier: $ => choice('new', 'make'),
 
-    special_argument_list: $ =>
-      seq('(', $._type, repeat(seq(',', $._expression)), optional(','), ')'),
+    variadic_argument: $ => prec.right(seq($.expression_, '...')),
 
-    argument_list: $ =>
+    special_arguments: $ =>
       seq(
         '(',
-        optional(
+        field(
+          'argument_list',
+          seq($.type, repeat(seq(',', $.expression_)), optional(','))
+        ),
+        ')'
+      ),
+
+    argument: $ => choice($.expression_, $.variadic_argument),
+
+    arguments: $ =>
+      seq(
+        '(',
+        optional_with_placeholder(
+          'argument_list',
           seq(
-            choice($._expression, $.variadic_argument),
-            repeat(seq(',', choice($._expression, $.variadic_argument))),
+            commaSep(
+              $.argument
+              // choice(alias($.expression_, $.argument), alias($.variadic_argument, $.argument))
+            ),
             optional(',')
           )
         ),
@@ -618,7 +841,7 @@ module.exports = grammar({
       prec(
         PREC.primary,
         seq(
-          field('operand', $._expression),
+          field('operand', $.expression_),
           '.',
           field('field', $._field_identifier)
         )
@@ -628,9 +851,9 @@ module.exports = grammar({
       prec(
         PREC.primary,
         seq(
-          field('operand', $._expression),
+          field('operand', $.expression_),
           '[',
-          field('index', $._expression),
+          field('index', $.expression_),
           ']'
         )
       ),
@@ -639,20 +862,20 @@ module.exports = grammar({
       prec(
         PREC.primary,
         seq(
-          field('operand', $._expression),
+          field('operand', $.expression_),
           '[',
           choice(
             seq(
-              field('start', optional($._expression)),
+              optional($.expression_), // start
               ':',
-              field('end', optional($._expression))
+              optional($.expression_) // end
             ),
             seq(
-              field('start', optional($._expression)),
+              optional($.expression_), // start
               ':',
-              field('end', $._expression),
+              field('end', $.expression_),
               ':',
-              field('capacity', $._expression)
+              field('capacity', $.expression_)
             )
           ),
           ']'
@@ -663,7 +886,7 @@ module.exports = grammar({
       prec(
         PREC.primary,
         seq(
-          field('operand', $._expression),
+          field('operand', $.expression_),
           '.',
           '(',
           field('type', $._type),
@@ -677,7 +900,7 @@ module.exports = grammar({
         seq(
           field('type', $._type),
           '(',
-          field('operand', $._expression),
+          field('operand', $.expression_),
           optional(','),
           ')'
         )
@@ -690,7 +913,6 @@ module.exports = grammar({
           field(
             'type',
             choice(
-              $.map_type,
               $.slice_type,
               $.array_type,
               $.implicit_length_array_type,
@@ -703,37 +925,70 @@ module.exports = grammar({
         )
       ),
 
+    map_literal: $ =>
+      prec(
+        PREC.composite_literal,
+        seq(field('type', $.map_type), field('enclosed_body', $.map_value))
+      ),
+
     literal_value: $ =>
       seq(
         '{',
         optional(
           seq(
-            choice($.element, $.keyed_element),
-            repeat(seq(',', choice($.element, $.keyed_element))),
+            choice($.element, $.key_value_pair),
+            repeat($.list_element_with_seperator),
             optional(',')
           )
         ),
         '}'
       ),
 
-    keyed_element: $ =>
+    list_element_with_seperator: $ =>
+      seq(',', choice($.element, $.key_value_pair)),
+
+    key_value_pair_with_seperator: $ => seq(',', $.key_value_pair),
+
+    map_value: $ =>
       seq(
-        choice(
-          seq($._expression, ':'),
-          seq($.literal_value, ':'),
-          prec(1, seq($._field_identifier, ':'))
+        '{',
+        optional_with_placeholder(
+          'key_value_pair_list',
+          seq(
+            $.key_value_pair,
+            repeat($.key_value_pair_with_seperator),
+            optional(',')
+          )
         ),
-        choice($._expression, $.literal_value)
+        '}'
       ),
 
-    element: $ => choice($._expression, $.literal_value),
+    key_value_pair: $ =>
+      seq(
+        choice(
+          seq(alias($.expression_, $.key_value_pair_key), ':'),
+          seq(alias($.literal_value, $.key_value_pair_key), ':'),
+          prec(1, seq(alias($._field_identifier, $.key_value_pair_key), ':'))
+        ),
+        $.key_value_pair_value
+      ),
+
+    key_value_pair_value: $ => choice($.expression_, $.literal_value),
+
+    element: $ => choice($.expression_, $.literal_value),
 
     func_literal: $ =>
       seq(
         'func',
-        field('parameters', $.parameter_list),
-        field('result', optional(choice($.parameter_list, $._simple_type))),
-        field('body', $.block)
+        $.parameters,
+        choice(
+          alias($.return_block, $.return_value_name_list_optional),
+          optional_with_placeholder(
+            'type_optional',
+            alias($.simple_type, $.type)
+          )
+        ),
+        $.enclosed_body
       ),
 
     unary_expression: $ =>
@@ -741,7 +996,7 @@ module.exports = grammar({
         PREC.unary,
         seq(
           field('operator', choice('+', '-', '!', '^', '*', '&', '<-')),
-          field('operand', $._expression)
+          field('operand', $.expression_)
         )
       ),
 
@@ -759,9 +1014,9 @@ module.exports = grammar({
           prec.left(
             precedence,
             seq(
-              field('left', $._expression),
+              field('left', $.expression_),
               field('operator', operator),
-              field('right', $._expression)
+              field('right', $.expression_)
             )
           )
         )
@@ -770,7 +1025,7 @@ module.exports = grammar({
 
     qualified_type: $ =>
       seq(
-        field('package', $._package_identifier),
+        field('package', $.identifier),
         '.',
         field('name', $._type_identifier)
       ),
@@ -779,20 +1034,22 @@ module.exports = grammar({
 
     _type_identifier: $ => alias($.identifier, $.type_identifier),
     _field_identifier: $ => alias($.identifier, $.field_identifier),
-    _package_identifier: $ => alias($.identifier, $.package_identifier),
 
-    _string_literal: $ =>
-      choice($.raw_string_literal, $.interpreted_string_literal),
+    string: $ => choice($._raw_string_literal, $._interpreted_string_literal),
 
-    raw_string_literal: $ => token(seq('`', repeat(/[^`]/), '`')),
+    _raw_string_literal: $ =>
+      token(
+        seq('`', optional_with_placeholder('string_text', repeat1(/[^`]/)), '`')
+      ),
 
-    interpreted_string_literal: $ =>
-      seq(
-        '"',
-        repeat(
-          choice(token.immediate(prec(1, /[^"\n\\]+/)), $.escape_sequence)
-        ),
-        '"'
+    // TODO: use externals like with js/python grammars. Will enable string_text field correctly
+    _interpreted_string_literal: $ =>
+      token(
+        seq(
+          '"',
+          field('string_text', repeat(choice(/[^\\"\n]/, /\\(.|\n)/))),
+          '"'
+        )
       ),
 
     escape_sequence: $ =>
@@ -864,4 +1121,8 @@ function commaSep1(rule) {
 
 function commaSep(rule) {
   return optional(commaSep1(rule))
+}
+
+function optional_with_placeholder(field_name, rule) {
+  return choice(field(field_name, rule), field(field_name, blank()))
 }
