@@ -151,7 +151,10 @@ module.exports = grammar({
           $.const_spec,
           seq(
             '(',
-            field('const_spec_list', repeat(seq($.const_spec, terminator))),
+            optional_with_placeholder(
+              'const_spec_list',
+              repeat(seq($.const_spec, terminator))
+            ),
             ')'
           )
         )
