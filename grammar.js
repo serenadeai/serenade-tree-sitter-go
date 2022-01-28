@@ -149,7 +149,11 @@ module.exports = grammar({
         'const',
         choice(
           $.const_spec,
-          seq('(', repeat(seq($.const_spec, terminator)), ')')
+          seq(
+            '(',
+            field('const_spec_list', repeat(seq($.const_spec, terminator))),
+            ')'
+          )
         )
       ),
 
