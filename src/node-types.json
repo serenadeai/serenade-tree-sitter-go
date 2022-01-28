@@ -486,20 +486,6 @@
     "type": "case",
     "named": true,
     "fields": {
-      "communication": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "receive_statement",
-            "named": true
-          },
-          {
-            "type": "send_statement",
-            "named": true
-          }
-        ]
-      },
       "statement_list": {
         "multiple": false,
         "required": false,
@@ -513,7 +499,7 @@
     },
     "children": {
       "multiple": false,
-      "required": false,
+      "required": true,
       "types": [
         {
           "type": "condition",
@@ -543,6 +529,36 @@
     }
   },
   {
+    "type": "communication_case",
+    "named": true,
+    "fields": {
+      "communication": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "receive_statement",
+            "named": true
+          },
+          {
+            "type": "send_statement",
+            "named": true
+          }
+        ]
+      },
+      "statement_list": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "statement_list",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "communication_case_or_default",
     "named": true,
     "fields": {},
@@ -551,7 +567,11 @@
       "required": true,
       "types": [
         {
-          "type": "case",
+          "type": "communication_case",
+          "named": true
+        },
+        {
+          "type": "default_case",
           "named": true
         }
       ]

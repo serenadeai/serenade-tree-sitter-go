@@ -768,10 +768,7 @@ module.exports = grammar({
       seq('select', '{', repeat($.communication_case_or_default), '}'),
 
     communication_case_or_default: $ =>
-      choice(
-        alias($.communication_case, $.case),
-        alias($.default_case, $.case)
-      ),
+      choice($.communication_case, $.default_case),
 
     communication_case: $ =>
       seq(

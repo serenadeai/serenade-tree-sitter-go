@@ -3692,22 +3692,12 @@
       "type": "CHOICE",
       "members": [
         {
-          "type": "ALIAS",
-          "content": {
-            "type": "SYMBOL",
-            "name": "communication_case"
-          },
-          "named": true,
-          "value": "case"
+          "type": "SYMBOL",
+          "name": "communication_case"
         },
         {
-          "type": "ALIAS",
-          "content": {
-            "type": "SYMBOL",
-            "name": "default_case"
-          },
-          "named": true,
-          "value": "case"
+          "type": "SYMBOL",
+          "name": "default_case"
         }
       ]
     },
