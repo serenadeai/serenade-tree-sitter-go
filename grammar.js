@@ -90,6 +90,7 @@ module.exports = grammar({
     [$.return_type_list, $.return_value_name_list_optional],
     [$.return_type_list, $.type_optional],
     [$.special_call_identifier, $.expression_],
+    [$.block_initializer_optional, $._type_switch_header],
   ],
 
   supertypes: $ => [],
@@ -529,6 +530,7 @@ module.exports = grammar({
         $.if,
         $.for,
         $.switch,
+        $.type_switch,
         $.select_statement,
         $.labeled_statement,
         $.fallthrough_statement,
@@ -538,8 +540,6 @@ module.exports = grammar({
         $.enclosed_body
         // $.empty_statement
       ),
-
-    switch: $ => choice($.expression_switch, $.type_switch),
 
     // empty_statement: ($) => ";",
 
@@ -698,23 +698,31 @@ module.exports = grammar({
         alias($.expression_, $.block_collection)
       ),
 
-    expression_switch: $ =>
+    switch: $ =>
       seq(
         'switch',
-        optional(seq($._simple_statement, ';')),
-        optional($.expression_), // value
+        optional_with_placeholder(
+          'block_initializer_optional',
+          $.block_initializer_optional
+        ),
+        optional_with_placeholder(
+          'condition_optional',
+          alias($.expression_, $.condition)
+        ), // value
         '{',
-        repeat($.expression_case_or_default),
+        optional_with_placeholder('switch_case_list', $.switch_case_list),
         '}'
       ),
 
+    switch_case_list: $ => repeat1($.expression_case_or_default),
+
     expression_case_or_default: $ =>
-      choice(alias($.expression_case, $.case), alias($.default_case, $.case)),
+      choice(alias($.expression_case, $.case), $.default_case),
 
     expression_case: $ =>
       seq(
         'case',
-        field('value', $.expression_list),
+        field('condition', $.expression_list),
         ':',
         optional_with_placeholder('statement_list', $.statement_list)
       ),
