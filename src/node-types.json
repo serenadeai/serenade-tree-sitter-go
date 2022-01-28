@@ -519,24 +519,6 @@
             "named": true
           }
         ]
-      },
-      "type": {
-        "multiple": true,
-        "required": false,
-        "types": [
-          {
-            "type": ",",
-            "named": false
-          },
-          {
-            "type": "parenthesized_type",
-            "named": true
-          },
-          {
-            "type": "simple_type",
-            "named": true
-          }
-        ]
       }
     }
   },
@@ -3236,6 +3218,40 @@
     }
   },
   {
+    "type": "type_case",
+    "named": true,
+    "fields": {
+      "statement_list": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "statement_list",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": ",",
+            "named": false
+          },
+          {
+            "type": "parenthesized_type",
+            "named": true
+          },
+          {
+            "type": "simple_type",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "type_case_or_default",
     "named": true,
     "fields": {},
@@ -3244,7 +3260,11 @@
       "required": true,
       "types": [
         {
-          "type": "case",
+          "type": "default_case",
+          "named": true
+        },
+        {
+          "type": "type_case",
           "named": true
         }
       ]

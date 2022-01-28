@@ -743,8 +743,7 @@ module.exports = grammar({
         '}'
       ),
 
-    type_case_or_default: $ =>
-      choice(alias($.type_case, $.case), alias($.default_case, $.case)),
+    type_case_or_default: $ => choice($.type_case, $.default_case),
 
     _type_switch_header: $ =>
       seq(

@@ -3521,22 +3521,12 @@
       "type": "CHOICE",
       "members": [
         {
-          "type": "ALIAS",
-          "content": {
-            "type": "SYMBOL",
-            "name": "type_case"
-          },
-          "named": true,
-          "value": "case"
+          "type": "SYMBOL",
+          "name": "type_case"
         },
         {
-          "type": "ALIAS",
-          "content": {
-            "type": "SYMBOL",
-            "name": "default_case"
-          },
-          "named": true,
-          "value": "case"
+          "type": "SYMBOL",
+          "name": "default_case"
         }
       ]
     },
