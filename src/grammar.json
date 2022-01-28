@@ -3423,12 +3423,13 @@
           "value": "case"
         },
         {
-          "type": "FIELD",
-          "name": "condition",
+          "type": "ALIAS",
           "content": {
             "type": "SYMBOL",
             "name": "expression_list"
-          }
+          },
+          "named": true,
+          "value": "condition"
         },
         {
           "type": "STRING",

@@ -722,7 +722,7 @@ module.exports = grammar({
     expression_case: $ =>
       seq(
         'case',
-        field('condition', $.expression_list),
+        alias($.expression_list, $.condition),
         ':',
         optional_with_placeholder('statement_list', $.statement_list)
       ),

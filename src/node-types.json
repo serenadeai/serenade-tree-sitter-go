@@ -500,16 +500,6 @@
           }
         ]
       },
-      "condition": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "expression_list",
-            "named": true
-          }
-        ]
-      },
       "statement_list": {
         "multiple": false,
         "required": false,
@@ -520,6 +510,16 @@
           }
         ]
       }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "condition",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -608,7 +608,7 @@
     "named": true,
     "fields": {},
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": false,
       "types": [
         {
@@ -621,6 +621,10 @@
         },
         {
           "type": "composite_literal",
+          "named": true
+        },
+        {
+          "type": "expression_",
           "named": true
         },
         {
