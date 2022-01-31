@@ -89,6 +89,7 @@ module.exports = grammar({
     [$.parameters, $.receiver_argument_optional],
     [$.return_type_list, $.return_value_name_list_optional],
     [$.return_type_list, $.type_optional],
+    [$.type, $._type],
     [$.special_call_identifier, $.expression_],
     [$.block_initializer_optional, $._type_switch_header],
   ],
@@ -219,8 +220,8 @@ module.exports = grammar({
           choice(
             alias($.return_block, $.return_value_name_list_optional),
             optional_with_placeholder(
-              'type_optional',
-              alias($.simple_type, $.type)
+              'return_type_list_optional',
+              $.return_type_list_optional
             )
           ),
           $.enclosed_body
@@ -241,8 +242,8 @@ module.exports = grammar({
           choice(
             alias($.return_block, $.return_value_name_list_optional),
             optional_with_placeholder(
-              'type_optional',
-              alias($.simple_type, $.type)
+              'return_type_list_optional',
+              $.return_type_list_optional
             )
           )
         )
@@ -259,8 +260,8 @@ module.exports = grammar({
           choice(
             alias($.return_block, $.return_value_name_list_optional),
             optional_with_placeholder(
-              'type_optional',
-              alias($.simple_type, $.type)
+              'return_type_list_optional',
+              $.return_type_list_optional
             )
           ),
           optional($.enclosed_body)
@@ -290,18 +291,18 @@ module.exports = grammar({
     receiver_argument_optional: $ =>
       seq('(', alias($.parameter, $.receiver_argument), ')'),
 
-    return_block: $ =>
+    return_block: $ => choice($.return_value_name_list_optional),
+
+    return_type_list_optional: $ =>
       choice(
-        $.return_value_name_list_optional,
-        $.return_type_list // TODO: label this correctly
+        seq('(', $.return_type_list, ')'),
+        alias($.type_optional, $.return_type_list)
       ),
 
     return_type_list: $ =>
       seq(
-        '(',
-        optional_with_placeholder('return_value_name_list', commaSep1($.type)), // TODO: remove incorrect label when ast is updated
-        optional(','),
-        ')'
+        commaSep1($.type), // TODO: remove incorrect label when ast is updated
+        optional(',')
       ),
 
     parameter: $ =>
@@ -470,8 +471,8 @@ module.exports = grammar({
         choice(
           alias($.return_block, $.return_value_name_list_optional),
           optional_with_placeholder(
-            'type_optional',
-            alias($.simple_type, $.type)
+            'return_type_list_optional',
+            $.return_type_list_optional
           )
         )
       ),
@@ -492,8 +493,8 @@ module.exports = grammar({
         choice(
           alias($.return_block, $.return_value_name_list_optional),
           optional_with_placeholder(
-            'type_optional',
-            alias($.simple_type, $.type)
+            'return_type_list_optional',
+            $.return_type_list_optional
           )
         )
       ),
@@ -995,8 +996,8 @@ module.exports = grammar({
         choice(
           alias($.return_block, $.return_value_name_list_optional),
           optional_with_placeholder(
-            'type_optional',
-            alias($.simple_type, $.type)
+            'return_type_list_optional',
+            $.return_type_list_optional
           )
         ),
         $.enclosed_body
