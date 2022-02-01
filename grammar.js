@@ -87,8 +87,6 @@ module.exports = grammar({
     [$.function_type],
     [$.plain_parameter, $.simple_type],
     [$.parameters, $.receiver_argument_optional],
-    [$.return_type_list, $.return_value_name_list_optional],
-    [$.return_type_list, $.type_optional],
     [$.type, $._type],
     [$.special_call_identifier, $.expression_],
     [$.block_initializer_optional, $._type_switch_header],
@@ -217,12 +215,9 @@ module.exports = grammar({
           ),
           $.identifier,
           $.parameters,
-          choice(
-            alias($.return_block, $.return_value_name_list_optional),
-            optional_with_placeholder(
-              'return_type_list_optional',
-              $.return_type_list_optional
-            )
+          optional_with_placeholder(
+            'return_type_list_optional',
+            $.return_type_list_optional
           ),
           $.enclosed_body
         )
@@ -239,12 +234,9 @@ module.exports = grammar({
           ),
           $.identifier,
           $.parameters,
-          choice(
-            alias($.return_block, $.return_value_name_list_optional),
-            optional_with_placeholder(
-              'return_type_list_optional',
-              $.return_type_list_optional
-            )
+          optional_with_placeholder(
+            'return_type_list_optional',
+            $.return_type_list_optional
           )
         )
       ),
@@ -257,12 +249,9 @@ module.exports = grammar({
           $.receiver_argument_optional,
           field('identifier', $._field_identifier),
           $.parameters,
-          choice(
-            alias($.return_block, $.return_value_name_list_optional),
-            optional_with_placeholder(
-              'return_type_list_optional',
-              $.return_type_list_optional
-            )
+          optional_with_placeholder(
+            'return_type_list_optional',
+            $.return_type_list_optional
           ),
           optional($.enclosed_body)
         )
@@ -278,35 +267,26 @@ module.exports = grammar({
         ')'
       ),
 
-    return_value_name_list_optional: $ =>
-      seq(
-        '(',
-        optional_with_placeholder(
-          'return_value_name_list',
-          seq(commaSep(alias($.parameter, $.return_value_name)), optional(','))
+    return_type_list_optional: $ =>
+      choice(
+        seq(
+          '(',
+          optional_with_placeholder(
+            'return_type_list',
+            seq(commaSep(alias($.return_type, $.type)), optional(','))
+          ),
+          ')'
         ),
-        ')'
+        alias($.simple_type_optional, $.return_type_list)
       ),
 
     receiver_argument_optional: $ =>
       seq('(', alias($.parameter, $.receiver_argument), ')'),
 
-    return_block: $ => choice($.return_value_name_list_optional),
-
-    return_type_list_optional: $ =>
-      choice(
-        seq('(', $.return_type_list, ')'),
-        alias($.type_optional, $.return_type_list)
-      ),
-
-    return_type_list: $ =>
-      seq(
-        commaSep1($.type), // TODO: remove incorrect label when ast is updated
-        optional(',')
-      ),
-
     parameter: $ =>
       choice($.plain_parameter, $.variadic_parameter, $.type_optional),
+
+    return_type: $ => choice($.plain_parameter, $.variadic_parameter, $.type),
 
     plain_parameter: $ =>
       seq($.identifier, optional_with_placeholder('type_optional', $.type)),
@@ -315,6 +295,8 @@ module.exports = grammar({
       seq(optional($.identifier), '...', $.type_optional),
 
     type_optional: $ => $.type,
+
+    simple_type_optional: $ => alias($.simple_type, $.type),
 
     type_alias: $ =>
       seq(
@@ -468,12 +450,9 @@ module.exports = grammar({
       seq(
         alias($._field_identifier, $.identifier),
         $.parameters,
-        choice(
-          alias($.return_block, $.return_value_name_list_optional),
-          optional_with_placeholder(
-            'return_type_list_optional',
-            $.return_type_list_optional
-          )
+        optional_with_placeholder(
+          'return_type_list_optional',
+          $.return_type_list_optional
         )
       ),
 
@@ -490,12 +469,9 @@ module.exports = grammar({
       seq(
         'func',
         $.parameters,
-        choice(
-          alias($.return_block, $.return_value_name_list_optional),
-          optional_with_placeholder(
-            'return_type_list_optional',
-            $.return_type_list_optional
-          )
+        optional_with_placeholder(
+          'return_type_list_optional',
+          $.return_type_list_optional
         )
       ),
 
@@ -993,12 +969,9 @@ module.exports = grammar({
       seq(
         'func',
         $.parameters,
-        choice(
-          alias($.return_block, $.return_value_name_list_optional),
-          optional_with_placeholder(
-            'return_type_list_optional',
-            $.return_type_list_optional
-          )
+        optional_with_placeholder(
+          'return_type_list_optional',
+          $.return_type_list_optional
         ),
         $.enclosed_body
       ),
